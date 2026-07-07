@@ -36,11 +36,15 @@ app.use(express.urlencoded({ extended: true, limit: '16kb' }));
 app.use(cookieParser());
 
 // ==========================================
-// 2. Health Check Endpoint
+// 2. Health Check & API Routes
 // ==========================================
 app.get('/api/v1/health', (req, res) => {
   res.status(200).json(new ApiResponse(200, { status: 'UP', timestamp: new Date() }, 'Health check passed'));
 });
+
+// Auth Routes
+const authRouter = require('./routes/auth.routes');
+app.use('/api/v1/auth', authRouter);
 
 // ==========================================
 // 3. Centralized Error Handler
