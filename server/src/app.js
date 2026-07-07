@@ -58,6 +58,10 @@ app.use('/api/v1/parking-lots', parkingLotRouter);
 const parkingSlotRouter = require('./routes/parkingSlot.routes');
 app.use('/api/v1/parking-slots', parkingSlotRouter);
 
+// Booking Routes
+const bookingRouter = require('./routes/booking.routes');
+app.use('/api/v1/bookings', bookingRouter);
+
 // ==========================================
 // 3. Centralized Error Handler
 // ==========================================
