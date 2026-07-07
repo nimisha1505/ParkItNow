@@ -50,6 +50,10 @@ app.use('/api/v1/auth', authRouter);
 const vehicleRouter = require('./routes/vehicle.routes');
 app.use('/api/v1/vehicles', vehicleRouter);
 
+// Parking Lot Routes
+const parkingLotRouter = require('./routes/parkingLot.routes');
+app.use('/api/v1/parking-lots', parkingLotRouter);
+
 // ==========================================
 // 3. Centralized Error Handler
 // ==========================================
