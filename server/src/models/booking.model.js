@@ -61,8 +61,43 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    qrTokenHash: {
+      type: String,
+    },
+    qrIssuedAt: {
+      type: Date,
+    },
+    entryStatus: {
+      type: String,
+      enum: ['not_checked_in', 'checked_in', 'checked_out'],
+      default: 'not_checked_in',
+    },
+    checkedInAt: {
+      type: Date,
+    },
+    checkedOutAt: {
+      type: Date,
+    },
+    verifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
   },
   { timestamps: true }
 );
+
+bookingSchema.set('toJSON', {
+  transform: function (doc, ret) {
+    delete ret.qrTokenHash;
+    return ret;
+  },
+});
+
+bookingSchema.set('toObject', {
+  transform: function (doc, ret) {
+    delete ret.qrTokenHash;
+    return ret;
+  },
+});
 
 module.exports = mongoose.model('Booking', bookingSchema);

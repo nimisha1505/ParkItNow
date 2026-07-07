@@ -62,6 +62,10 @@ app.use('/api/v1/parking-slots', parkingSlotRouter);
 const bookingRouter = require('./routes/booking.routes');
 app.use('/api/v1/bookings', bookingRouter);
 
+// QR Routes
+const qrRouter = require('./routes/qr.routes');
+app.use('/api/v1', qrRouter);
+
 // ==========================================
 // 3. Centralized Error Handler
 // ==========================================
