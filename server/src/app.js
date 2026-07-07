@@ -46,6 +46,10 @@ app.get('/api/v1/health', (req, res) => {
 const authRouter = require('./routes/auth.routes');
 app.use('/api/v1/auth', authRouter);
 
+// Vehicle Routes
+const vehicleRouter = require('./routes/vehicle.routes');
+app.use('/api/v1/vehicles', vehicleRouter);
+
 // ==========================================
 // 3. Centralized Error Handler
 // ==========================================
