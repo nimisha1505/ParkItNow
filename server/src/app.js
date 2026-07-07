@@ -66,6 +66,10 @@ app.use('/api/v1/bookings', bookingRouter);
 const qrRouter = require('./routes/qr.routes');
 app.use('/api/v1', qrRouter);
 
+// Admin Dashboard Routes
+const adminDashboardRouter = require('./routes/adminDashboard.routes');
+app.use('/api/v1/admin/dashboard', adminDashboardRouter);
+
 // ==========================================
 // 3. Centralized Error Handler
 // ==========================================
