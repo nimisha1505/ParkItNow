@@ -1,11 +1,8 @@
-const ApiError = require('../utils/apiError');
+import { ApiError } from '../utils/apiError.js';
 
 const allowedTypes = ['car', 'bike', 'scooter', 'ev'];
 
-/**
- * Validator middleware for creating a vehicle.
- */
-const validateCreateVehicle = (req, res, next) => {
+export const validateCreateVehicle = (req, res, next) => {
   const { type, brand, model, registrationNumber, color, isDefault } = req.body;
   const errors = [];
 
@@ -40,10 +37,7 @@ const validateCreateVehicle = (req, res, next) => {
   next();
 };
 
-/**
- * Validator middleware for updating a vehicle.
- */
-const validateUpdateVehicle = (req, res, next) => {
+export const validateUpdateVehicle = (req, res, next) => {
   const { type, brand, model, registrationNumber, color, isDefault } = req.body;
   const errors = [];
 
@@ -76,9 +70,4 @@ const validateUpdateVehicle = (req, res, next) => {
   }
 
   next();
-};
-
-module.exports = {
-  validateCreateVehicle,
-  validateUpdateVehicle,
 };

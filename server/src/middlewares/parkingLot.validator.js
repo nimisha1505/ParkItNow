@@ -1,11 +1,8 @@
-const ApiError = require('../utils/apiError');
+import { ApiError } from '../utils/apiError.js';
 
 const allowedTypes = ['car', 'bike', 'scooter', 'ev'];
 
-/**
- * Validate parking lot creation.
- */
-const validateCreateParkingLot = (req, res, next) => {
+export const validateCreateParkingLot = (req, res, next) => {
   const {
     name,
     address,
@@ -57,10 +54,7 @@ const validateCreateParkingLot = (req, res, next) => {
   next();
 };
 
-/**
- * Validate parking lot updates.
- */
-const validateUpdateParkingLot = (req, res, next) => {
+export const validateUpdateParkingLot = (req, res, next) => {
   const {
     name,
     address,
@@ -112,9 +106,4 @@ const validateUpdateParkingLot = (req, res, next) => {
   }
 
   next();
-};
-
-module.exports = {
-  validateCreateParkingLot,
-  validateUpdateParkingLot,
 };

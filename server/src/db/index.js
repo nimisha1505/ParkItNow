@@ -1,20 +1,28 @@
-const mongoose = require('mongoose');
-const { DB_NAME } = require('../constants');
+import mongoose from 'mongoose';
+import { DB_NAME } from '../constants.js';
 
 /**
  * Connects to MongoDB.
- * Logs connection errors but does not exit the process to allow Express server to boot
- * and Mongoose to attempt background reconnections.
  */
 const connectDB = async () => {
+  const dbUri = process.env.MONGODB_URI;
+  if (!dbUri) {
+    throw new Error("MONGODB_URI is missing in server/.env");
+  }
+
+  console.log("Connecting to MongoDB Atlas...");
+  
   try {
-    const dbUri = `${process.env.MONGODB_URI}/${DB_NAME}`;
-    const connectionInstance = await mongoose.connect(dbUri);
-    console.log(`\n🟢 MongoDB connected successfully! DB HOST: ${connectionInstance.connection.host}`);
+    const connectionInstance = await mongoose.connect(dbUri, {
+      dbName: process.env.DB_NAME || DB_NAME,
+      serverSelectionTimeoutMS: 10000
+    });
+    console.log(`MongoDB connected successfully. Connected host: ${connectionInstance.connection.host}`);
+    return connectionInstance;
   } catch (error) {
-    console.error(`\n🔴 MongoDB connection FAILED: ${error.message}`);
-    console.log('👉 Server is booting up without database connection. Mongoose will auto-reconnect once the database is online.');
+    console.error(`MongoDB connection FAILED: ${error.message}`);
+    throw error;
   }
 };
 
-module.exports = connectDB;
+export default connectDB;

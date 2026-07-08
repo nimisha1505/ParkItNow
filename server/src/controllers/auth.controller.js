@@ -1,26 +1,45 @@
-const authService = require('../services/auth.service');
-const ApiResponse = require('../utils/apiResponse');
-const asyncHandler = require('../utils/asyncHandler');
+import jwt from 'jsonwebtoken';
+import User from '../models/user.model.js';
+import { ApiError } from '../utils/apiError.js';
+import { ApiResponse } from '../utils/apiResponse.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
-// Cookie options for token storage
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 };
 
-/**
- * Register controller.
- */
-const registerUser = asyncHandler(async (req, res) => {
+const generateAccessAndRefreshTokens = async (user) => {
+  const accessToken = user.generateAccessToken();
+  const refreshToken = user.generateRefreshToken();
+
+  user.refreshToken = refreshToken;
+  await user.save({ validateBeforeSave: false });
+
+  return { accessToken, refreshToken };
+};
+
+export const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, role } = req.body;
 
-  const { user, accessToken, refreshToken } = await authService.register({
+  const existedUser = await User.findOne({ email });
+  if (existedUser) {
+    throw new ApiError(409, 'User with this email already exists');
+  }
+
+  const user = await User.create({
     name,
     email,
     password,
-    role,
+    role: role || 'user',
   });
+
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
+
+  const createdUser = user.toObject();
+  delete createdUser.password;
+  delete createdUser.refreshToken;
 
   return res
     .status(201)
@@ -29,22 +48,30 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         201,
-        { user, accessToken, refreshToken },
+        { user: createdUser, accessToken, refreshToken },
         'User registered successfully'
       )
     );
 });
 
-/**
- * Login controller.
- */
-const loginUser = asyncHandler(async (req, res) => {
+export const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const { user, accessToken, refreshToken } = await authService.login({
-    email,
-    password,
-  });
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new ApiError(401, 'Invalid user credentials');
+  }
+
+  const isPasswordValid = await user.isPasswordCorrect(password);
+  if (!isPasswordValid) {
+    throw new ApiError(401, 'Invalid user credentials');
+  }
+
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
+
+  const loggedInUser = user.toObject();
+  delete loggedInUser.password;
+  delete loggedInUser.refreshToken;
 
   return res
     .status(200)
@@ -53,17 +80,18 @@ const loginUser = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        { user, accessToken, refreshToken },
+        { user: loggedInUser, accessToken, refreshToken },
         'User logged in successfully'
       )
     );
 });
 
-/**
- * Logout controller.
- */
-const logoutUser = asyncHandler(async (req, res) => {
-  await authService.logout(req.user._id);
+export const logoutUser = asyncHandler(async (req, res) => {
+  await User.findByIdAndUpdate(
+    req.user._id,
+    { $unset: { refreshToken: 1 } },
+    { new: true }
+  );
 
   return res
     .status(200)
@@ -72,45 +100,58 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, 'User logged out successfully'));
 });
 
-/**
- * Refresh token controller.
- */
-const refreshAccessToken = asyncHandler(async (req, res) => {
+export const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
     req.cookies?.refreshToken || req.body.refreshToken;
 
-  const { accessToken, refreshToken } = await authService.refreshAccessToken(
-    incomingRefreshToken
-  );
+  if (!incomingRefreshToken) {
+    throw new ApiError(401, 'Refresh token is required');
+  }
 
-  return res
-    .status(200)
-    .cookie('accessToken', accessToken, cookieOptions)
-    .cookie('refreshToken', refreshToken, cookieOptions)
-    .json(
-      new ApiResponse(
-        200,
-        { accessToken, refreshToken },
-        'Access token refreshed successfully'
-      )
+  try {
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET || 'refresh-secret'
     );
+
+    const user = await User.findById(decodedToken._id);
+    if (!user) {
+      throw new ApiError(401, 'Invalid refresh token');
+    }
+
+    if (incomingRefreshToken !== user.refreshToken) {
+      throw new ApiError(401, 'Refresh token is invalid or expired');
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
+
+    return res
+      .status(200)
+      .cookie('accessToken', accessToken, cookieOptions)
+      .cookie('refreshToken', refreshToken, cookieOptions)
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken, refreshToken },
+          'Access token refreshed successfully'
+        )
+      );
+  } catch (error) {
+    throw new ApiError(401, error?.message || 'Invalid refresh token');
+  }
 });
 
-/**
- * Get current authenticated user controller.
- */
-const getCurrentUser = asyncHandler(async (req, res) => {
-  const user = await authService.getCurrentUser(req.user._id);
+export const getCurrentUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  const userObj = user.toObject();
+  delete userObj.password;
+  delete userObj.refreshToken;
 
   return res
     .status(200)
-    .json(new ApiResponse(200, user, 'Current user retrieved successfully'));
+    .json(new ApiResponse(200, userObj, 'Current user retrieved successfully'));
 });
-
-module.exports = {
-  registerUser,
-  loginUser,
-  logoutUser,
-  refreshAccessToken,
-  getCurrentUser,
-};

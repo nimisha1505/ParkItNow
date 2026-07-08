@@ -1,16 +1,16 @@
-const { Router } = require('express');
-const {
+import { Router } from 'express';
+import {
   createBooking,
   getMyBookings,
   getBookingById,
   cancelBooking,
   getAllBookings,
-} = require('../controllers/booking.controller');
-const { verifyJWT } = require('../middleware/auth.middleware');
-const {
+} from '../controllers/booking.controller.js';
+import { verifyJWT } from '../middlewares/auth.middleware.js';
+import {
   validateCreateBooking,
   validateCancelBooking,
-} = require('../validators/booking.validator');
+} from '../middlewares/booking.validator.js';
 
 const router = Router();
 
@@ -28,4 +28,4 @@ router.route('/:bookingId').get(getBookingById);
 
 router.patch('/:bookingId/cancel', validateCancelBooking, cancelBooking);
 
-module.exports = router;
+export default router;

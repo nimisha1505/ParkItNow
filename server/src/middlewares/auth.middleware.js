@@ -1,13 +1,9 @@
-const jwt = require('jsonwebtoken');
-const ApiError = require('../utils/apiError');
-const asyncHandler = require('../utils/asyncHandler');
-const userRepository = require('../repositories/user.repository');
+import jwt from 'jsonwebtoken';
+import { ApiError } from '../utils/apiError.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import User from '../models/user.model.js';
 
-/**
- * Authentication middleware that verifies JWT Access Tokens from cookies or headers.
- * Populates req.user with the active User model if valid.
- */
-const verifyJWT = asyncHandler(async (req, res, next) => {
+export const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
     const token =
       req.cookies?.accessToken ||
@@ -22,7 +18,7 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
       process.env.ACCESS_TOKEN_SECRET || 'access-secret'
     );
 
-    const user = await userRepository.findById(decodedToken._id);
+    const user = await User.findById(decodedToken._id);
 
     if (!user) {
       throw new ApiError(401, 'Invalid access token');
@@ -34,5 +30,3 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
     throw new ApiError(401, error?.message || 'Invalid access token');
   }
 });
-
-module.exports = { verifyJWT };

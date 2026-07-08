@@ -1,9 +1,6 @@
-const ApiError = require('../utils/apiError');
+import { ApiError } from '../utils/apiError.js';
 
-/**
- * Validates request payload for registration.
- */
-const validateRegister = (req, res, next) => {
+export const validateRegister = (req, res, next) => {
   const { name, email, password } = req.body;
   const errors = [];
 
@@ -26,10 +23,7 @@ const validateRegister = (req, res, next) => {
   next();
 };
 
-/**
- * Validates request payload for login.
- */
-const validateLogin = (req, res, next) => {
+export const validateLogin = (req, res, next) => {
   const { email, password } = req.body;
   const errors = [];
 
@@ -46,9 +40,4 @@ const validateLogin = (req, res, next) => {
   }
 
   next();
-};
-
-module.exports = {
-  validateRegister,
-  validateLogin,
 };

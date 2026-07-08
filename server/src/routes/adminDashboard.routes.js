@@ -1,11 +1,11 @@
-const { Router } = require('express');
-const {
+import { Router } from 'express';
+import {
   getOverview,
   getRevenue,
   getOccupancy,
   getRecentBookings,
-} = require('../controllers/adminDashboard.controller');
-const { verifyJWT } = require('../middleware/auth.middleware');
+} from '../controllers/adminDashboard.controller.js';
+import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
@@ -17,4 +17,4 @@ router.get('/revenue', getRevenue);
 router.get('/occupancy', getOccupancy);
 router.get('/recent-bookings', getRecentBookings);
 
-module.exports = router;
+export default router;

@@ -1,4 +1,4 @@
-const ApiError = require('../utils/apiError');
+import { ApiError } from '../utils/apiError.js';
 
 /**
  * Centralized error handler middleware.
@@ -25,4 +25,5 @@ const errorMiddleware = (err, req, res, next) => {
   return res.status(error.statusCode).json(response);
 };
 
-module.exports = errorMiddleware;
+export default errorMiddleware;
+export { errorMiddleware };

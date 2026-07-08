@@ -1,9 +1,6 @@
-const ApiError = require('../utils/apiError');
+import { ApiError } from '../utils/apiError.js';
 
-/**
- * Validate incoming QR verification and action payload.
- */
-const validateQrAction = (req, res, next) => {
+export const validateQrAction = (req, res, next) => {
   const { bookingReference, qrToken } = req.body;
   const errors = [];
 
@@ -20,8 +17,4 @@ const validateQrAction = (req, res, next) => {
   }
 
   next();
-};
-
-module.exports = {
-  validateQrAction,
 };

@@ -1,14 +1,16 @@
-const path = require('path');
-const dotenv = require('dotenv');
+import { fileURLToPath } from 'url';
+import path from 'path';
+import dotenv from 'dotenv';
+
+// Resolve __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables dynamically based on absolute path
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const app = require('./app');
-const connectDB = async () => {
-  const dbModule = require('./db');
-  await dbModule();
-};
+import app from './app.js';
+import connectDB from './db/index.js';
 
 const PORT = process.env.PORT || 5000;
 
@@ -24,11 +26,12 @@ let server;
 connectDB()
   .then(() => {
     server = app.listen(PORT, () => {
-      console.log(`\n🚀 Server is running on port: http://localhost:${PORT}`);
+      console.log(`Server running on port ${PORT}`);
     });
   })
   .catch((err) => {
-    console.error('🔴 Server boot failed due to database connection issue:', err);
+    console.error('Server boot failed due to database connection issue:', err);
+    process.exit(1);
   });
 
 process.on('unhandledRejection', (err) => {

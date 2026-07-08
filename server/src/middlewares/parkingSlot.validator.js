@@ -1,13 +1,10 @@
-const mongoose = require('mongoose');
-const ApiError = require('../utils/apiError');
+import mongoose from 'mongoose';
+import { ApiError } from '../utils/apiError.js';
 
 const allowedTypes = ['car', 'bike', 'scooter', 'ev'];
 const allowedStatuses = ['available', 'reserved', 'occupied', 'maintenance'];
 
-/**
- * Validate parking slot creation.
- */
-const validateCreateParkingSlot = (req, res, next) => {
+export const validateCreateParkingSlot = (req, res, next) => {
   const { parkingLot, slotNumber, floor, section, supportedVehicleTypes, status } = req.body;
   const errors = [];
 
@@ -47,10 +44,7 @@ const validateCreateParkingSlot = (req, res, next) => {
   next();
 };
 
-/**
- * Validate parking slot updates.
- */
-const validateUpdateParkingSlot = (req, res, next) => {
+export const validateUpdateParkingSlot = (req, res, next) => {
   const { parkingLot, slotNumber, floor, section, supportedVehicleTypes, status } = req.body;
   const errors = [];
 
@@ -90,9 +84,4 @@ const validateUpdateParkingSlot = (req, res, next) => {
   }
 
   next();
-};
-
-module.exports = {
-  validateCreateParkingSlot,
-  validateUpdateParkingSlot,
 };

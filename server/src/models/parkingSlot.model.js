@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const parkingSlotSchema = new mongoose.Schema(
   {
@@ -44,4 +44,5 @@ const parkingSlotSchema = new mongoose.Schema(
 // Enforce unique slot number within the same parking lot
 parkingSlotSchema.index({ parkingLot: 1, slotNumber: 1 }, { unique: true });
 
-module.exports = mongoose.model('ParkingSlot', parkingSlotSchema);
+const ParkingSlot = mongoose.model('ParkingSlot', parkingSlotSchema);
+export default ParkingSlot;

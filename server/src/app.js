@@ -1,10 +1,18 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const cookieParser = require('cookie-parser');
-const errorMiddleware = require('./middleware/error.middleware');
-const ApiResponse = require('./utils/apiResponse');
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
+import { errorMiddleware } from './middlewares/error.middleware.js';
+import { ApiResponse } from './utils/apiResponse.js';
+
+import authRouter from './routes/auth.routes.js';
+import vehicleRouter from './routes/vehicle.routes.js';
+import parkingLotRouter from './routes/parkingLot.routes.js';
+import parkingSlotRouter from './routes/parkingSlot.routes.js';
+import bookingRouter from './routes/booking.routes.js';
+import qrRouter from './routes/qr.routes.js';
+import adminDashboardRouter from './routes/adminDashboard.routes.js';
 
 const app = express();
 
@@ -12,10 +20,8 @@ const app = express();
 // 1. Global Middlewares
 // ==========================================
 
-// HTTP Security Headers
 app.use(helmet());
 
-// Cross-Origin Resource Sharing
 app.use(
   cors({
     origin: process.env.CLIENT_URL || '*',
@@ -23,16 +29,9 @@ app.use(
   })
 );
 
-// HTTP Request Logger
 app.use(morgan('dev'));
-
-// JSON Body Parser (with limit control to prevent payloads flooding)
 app.use(express.json({ limit: '16kb' }));
-
-// URL Encoded Body Parser
 app.use(express.urlencoded({ extended: true, limit: '16kb' }));
-
-// Cookie Parser middleware
 app.use(cookieParser());
 
 // ==========================================
@@ -42,32 +41,12 @@ app.get('/api/v1/health', (req, res) => {
   res.status(200).json(new ApiResponse(200, { status: 'UP', timestamp: new Date() }, 'Health check passed'));
 });
 
-// Auth Routes
-const authRouter = require('./routes/auth.routes');
 app.use('/api/v1/auth', authRouter);
-
-// Vehicle Routes
-const vehicleRouter = require('./routes/vehicle.routes');
 app.use('/api/v1/vehicles', vehicleRouter);
-
-// Parking Lot Routes
-const parkingLotRouter = require('./routes/parkingLot.routes');
 app.use('/api/v1/parking-lots', parkingLotRouter);
-
-// Parking Slot Routes
-const parkingSlotRouter = require('./routes/parkingSlot.routes');
 app.use('/api/v1/parking-slots', parkingSlotRouter);
-
-// Booking Routes
-const bookingRouter = require('./routes/booking.routes');
 app.use('/api/v1/bookings', bookingRouter);
-
-// QR Routes
-const qrRouter = require('./routes/qr.routes');
 app.use('/api/v1', qrRouter);
-
-// Admin Dashboard Routes
-const adminDashboardRouter = require('./routes/adminDashboard.routes');
 app.use('/api/v1/admin/dashboard', adminDashboardRouter);
 
 // ==========================================
@@ -75,4 +54,4 @@ app.use('/api/v1/admin/dashboard', adminDashboardRouter);
 // ==========================================
 app.use(errorMiddleware);
 
-module.exports = app;
+export default app;

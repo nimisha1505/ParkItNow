@@ -1,16 +1,16 @@
-const { Router } = require('express');
-const {
+import { Router } from 'express';
+import {
   createParkingLot,
   getParkingLots,
   getParkingLotById,
   updateParkingLot,
   deleteParkingLot,
-} = require('../controllers/parkingLot.controller');
-const { verifyJWT } = require('../middleware/auth.middleware');
-const {
+} from '../controllers/parkingLot.controller.js';
+import { verifyJWT } from '../middlewares/auth.middleware.js';
+import {
   validateCreateParkingLot,
   validateUpdateParkingLot,
-} = require('../validators/parkingLot.validator');
+} from '../middlewares/parkingLot.validator.js';
 
 const router = Router();
 
@@ -26,4 +26,4 @@ router
   .patch(verifyJWT, validateUpdateParkingLot, updateParkingLot)
   .delete(verifyJWT, deleteParkingLot);
 
-module.exports = router;
+export default router;

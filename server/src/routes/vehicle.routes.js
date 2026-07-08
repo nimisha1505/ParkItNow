@@ -1,17 +1,17 @@
-const { Router } = require('express');
-const {
+import { Router } from 'express';
+import {
   createVehicle,
   getVehicles,
   getVehicleById,
   updateVehicle,
   deleteVehicle,
   setDefaultVehicle,
-} = require('../controllers/vehicle.controller');
-const { verifyJWT } = require('../middleware/auth.middleware');
-const {
+} from '../controllers/vehicle.controller.js';
+import { verifyJWT } from '../middlewares/auth.middleware.js';
+import {
   validateCreateVehicle,
   validateUpdateVehicle,
-} = require('../validators/vehicle.validator');
+} from '../middlewares/vehicle.validator.js';
 
 const router = Router();
 
@@ -31,4 +31,4 @@ router
 
 router.patch('/:vehicleId/default', setDefaultVehicle);
 
-module.exports = router;
+export default router;

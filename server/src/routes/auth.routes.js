@@ -1,16 +1,16 @@
-const { Router } = require('express');
-const {
+import { Router } from 'express';
+import {
   registerUser,
   loginUser,
   logoutUser,
   refreshAccessToken,
   getCurrentUser,
-} = require('../controllers/auth.controller');
-const { verifyJWT } = require('../middleware/auth.middleware');
-const {
+} from '../controllers/auth.controller.js';
+import { verifyJWT } from '../middlewares/auth.middleware.js';
+import {
   validateRegister,
   validateLogin,
-} = require('../validators/auth.validator');
+} from '../middlewares/auth.validator.js';
 
 const router = Router();
 
@@ -23,4 +23,4 @@ router.post('/refresh-token', refreshAccessToken);
 router.post('/logout', verifyJWT, logoutUser);
 router.get('/current-user', verifyJWT, getCurrentUser);
 
-module.exports = router;
+export default router;

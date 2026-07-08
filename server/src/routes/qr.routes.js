@@ -1,12 +1,12 @@
-const { Router } = require('express');
-const {
+import { Router } from 'express';
+import {
   generateQrPass,
   verifyQrPass,
   checkIn,
   checkOut,
-} = require('../controllers/qr.controller');
-const { verifyJWT } = require('../middleware/auth.middleware');
-const { validateQrAction } = require('../validators/qr.validator');
+} from '../controllers/qr.controller.js';
+import { verifyJWT } from '../middlewares/auth.middleware.js';
+import { validateQrAction } from '../middlewares/qr.validator.js';
 
 const router = Router();
 
@@ -21,4 +21,4 @@ router.post('/qr/verify', validateQrAction, verifyQrPass);
 router.post('/qr/check-in', validateQrAction, checkIn);
 router.post('/qr/check-out', validateQrAction, checkOut);
 
-module.exports = router;
+export default router;

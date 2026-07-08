@@ -1,10 +1,7 @@
-const mongoose = require('mongoose');
-const ApiError = require('../utils/apiError');
+import mongoose from 'mongoose';
+import { ApiError } from '../utils/apiError.js';
 
-/**
- * Validate booking creation request payload.
- */
-const validateCreateBooking = (req, res, next) => {
+export const validateCreateBooking = (req, res, next) => {
   const { parkingLot, parkingSlot, vehicle, startTime, endTime } = req.body;
   const errors = [];
 
@@ -43,10 +40,7 @@ const validateCreateBooking = (req, res, next) => {
   next();
 };
 
-/**
- * Validate booking cancel request payload.
- */
-const validateCancelBooking = (req, res, next) => {
+export const validateCancelBooking = (req, res, next) => {
   const { cancellationReason } = req.body;
   const errors = [];
 
@@ -59,9 +53,4 @@ const validateCancelBooking = (req, res, next) => {
   }
 
   next();
-};
-
-module.exports = {
-  validateCreateBooking,
-  validateCancelBooking,
 };
