@@ -7,6 +7,7 @@ import Register from '../pages/Register.jsx';
 import ParkingLots from '../pages/ParkingLots.jsx';
 import MyBookings from '../pages/MyBookings.jsx';
 import AdminDashboard from '../pages/AdminDashboard.jsx';
+import Vehicles from '../pages/Vehicles.jsx';
 import NotFound from '../pages/NotFound.jsx';
 
 const AppRoutes = () => {
@@ -19,6 +20,7 @@ const AppRoutes = () => {
           <Route path="register" element={<Register />} />
           <Route path="parking-lots" element={<ParkingLots />} />
           <Route path="my-bookings" element={<MyBookings />} />
+          <Route path="vehicles" element={<Vehicles />} />
           <Route path="admin" element={<AdminDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Route>
