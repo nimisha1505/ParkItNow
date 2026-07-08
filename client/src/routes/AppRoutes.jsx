@@ -5,7 +5,9 @@ import Home from '../pages/Home.jsx';
 import Login from '../pages/Login.jsx';
 import Register from '../pages/Register.jsx';
 import ParkingLots from '../pages/ParkingLots.jsx';
+import ParkingSlots from '../pages/ParkingSlots.jsx';
 import MyBookings from '../pages/MyBookings.jsx';
+import QRPass from '../pages/QRPass.jsx';
 import AdminDashboard from '../pages/AdminDashboard.jsx';
 import Vehicles from '../pages/Vehicles.jsx';
 import NotFound from '../pages/NotFound.jsx';
@@ -19,7 +21,9 @@ const AppRoutes = () => {
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
           <Route path="parking-lots" element={<ParkingLots />} />
+          <Route path="parking-lots/:lotId/slots" element={<ParkingSlots />} />
           <Route path="my-bookings" element={<MyBookings />} />
+          <Route path="bookings/:bookingId/qr-pass" element={<QRPass />} />
           <Route path="vehicles" element={<Vehicles />} />
           <Route path="admin" element={<AdminDashboard />} />
           <Route path="*" element={<NotFound />} />

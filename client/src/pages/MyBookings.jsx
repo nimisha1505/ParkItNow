@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, ArrowRight } from 'lucide-react';
 
 const DUMMY_BOOKINGS = [
@@ -44,6 +45,7 @@ const DUMMY_BOOKINGS = [
 ];
 
 const MyBookings = () => {
+  const navigate = useNavigate();
   const getStatusBadge = (status) => {
     switch (status) {
       case 'confirmed':
@@ -174,7 +176,7 @@ const MyBookings = () => {
               {booking.status === 'confirmed' && (
                 <>
                   <button
-                    onClick={() => console.log(`Viewing QR pass for booking: ${booking.bookingReference}`)}
+                    onClick={() => navigate(`/bookings/${booking.id}/qr-pass`)}
                     className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold py-2 px-4 rounded-lg shadow-lg transition-colors text-center text-sm"
                   >
                     View QR Pass

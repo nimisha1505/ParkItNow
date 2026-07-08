@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Compass, MapPin } from 'lucide-react';
 
 const DUMMY_LOTS = [
@@ -45,6 +46,7 @@ const DUMMY_LOTS = [
 ];
 
 const ParkingLots = () => {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     city: '',
     area: '',
@@ -198,7 +200,7 @@ const ParkingLots = () => {
             </div>
 
             <button
-              onClick={() => console.log(`Viewing slots for lot: ${lot.name}`)}
+              onClick={() => navigate(`/parking-lots/${lot.id}/slots`)}
               className="w-full bg-blue-500 hover:bg-blue-600 text-slate-900 font-bold py-2 rounded-lg transition-colors text-center"
             >
               View Slots
