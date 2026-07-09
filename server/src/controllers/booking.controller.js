@@ -64,7 +64,13 @@ export const createBooking = asyncHandler(async (req, res) => {
   // 8. Generate booking reference PIN-[8-char hex]
   const bookingReference = `PIN-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
-  // 9. Save
+  // 9. Revenue calculation
+  const platformFee = Number((totalAmount * 0.1).toFixed(2));
+  const ownerEarning = Number((totalAmount - platformFee).toFixed(2));
+  const paymentStatus = 'paid';
+  const payoutStatus = 'pending';
+
+  // 10. Save
   const booking = await Booking.create({
     user: userId,
     parkingLot,
@@ -76,6 +82,10 @@ export const createBooking = asyncHandler(async (req, res) => {
     durationHours,
     hourlyRateSnapshot,
     totalAmount,
+    platformFee,
+    ownerEarning,
+    paymentStatus,
+    payoutStatus,
     status: 'confirmed',
   });
 

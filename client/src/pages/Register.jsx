@@ -1,18 +1,32 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const Register = () => {
   const navigate = useNavigate();
   const { registerUser } = useAuth();
+  const [searchParams] = useSearchParams();
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
+    role: 'user',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Sync role selector with query parameter if present
+  useEffect(() => {
+    const roleParam = searchParams.get('role');
+    if (roleParam === 'owner' || roleParam === 'user') {
+      setFormData((prev) => ({
+        ...prev,
+        role: roleParam,
+      }));
+    }
+  }, [searchParams]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,7 +45,7 @@ const Register = () => {
     setLoading(true);
     setError(null);
     try {
-      await registerUser(formData.name, formData.email, formData.password);
+      await registerUser(formData.name, formData.email, formData.password, formData.role);
       navigate('/login');
     } catch (err) {
       console.error('Register error:', err);
@@ -54,6 +68,39 @@ const Register = () => {
           </div>
         )}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Account Type Toggle cards */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-300">
+              Account Type
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, role: 'user' }))}
+                className={`p-3 rounded-lg border text-center transition-all ${
+                  formData.role === 'user'
+                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-semibold'
+                    : 'border-slate-700 bg-slate-900/50 text-slate-400 hover:border-slate-600'
+                }`}
+              >
+                <div className="text-sm">Book Parking</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">Driver / Customer</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, role: 'owner' }))}
+                className={`p-3 rounded-lg border text-center transition-all ${
+                  formData.role === 'owner'
+                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-semibold'
+                    : 'border-slate-700 bg-slate-900/50 text-slate-400 hover:border-slate-600'
+                }`}
+              >
+                <div className="text-sm font-bold">List Space</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">Parking Owner</div>
+              </button>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">
               Full Name

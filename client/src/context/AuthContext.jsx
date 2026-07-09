@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient.js';
 
 const AuthContext = createContext();
@@ -6,6 +7,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const fetchCurrentUser = async () => {
     try {
@@ -29,14 +31,20 @@ export const AuthProvider = ({ children }) => {
     return response.data;
   };
 
-  const registerUser = async (name, email, password) => {
-    const response = await axiosClient.post('/auth/register', { name, email, password });
+  const registerUser = async (name, email, password, role) => {
+    const response = await axiosClient.post('/auth/register', { name, email, password, role });
     return response.data;
   };
 
   const logoutUser = async () => {
-    await axiosClient.post('/auth/logout');
-    setUser(null);
+    try {
+      await axiosClient.post('/auth/logout');
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setUser(null);
+      navigate('/login');
+    }
   };
 
   const isAuthenticated = !!user;

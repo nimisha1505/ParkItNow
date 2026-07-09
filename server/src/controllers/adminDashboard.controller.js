@@ -6,12 +6,37 @@ import { ApiResponse } from '../utils/apiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 export const getOverview = asyncHandler(async (req, res) => {
-  if (req.user.role !== 'admin') {
-    throw new ApiError(403, 'Forbidden: Admin access required');
+  const isSuperAdmin = req.user.role === 'superAdmin';
+  const isOwner = req.user.role === 'owner';
+
+  if (!isSuperAdmin && !isOwner) {
+    throw new ApiError(403, 'Forbidden: Unauthorized access');
   }
 
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
+
+  const lotQuery = {};
+  const slotQuery = {};
+  const bookingQuery = {};
+
+  if (isOwner) {
+    const ownerLots = await ParkingLot.find({ owner: req.user._id });
+    const lotIds = ownerLots.map((lot) => lot._id);
+    lotQuery._id = { $in: lotIds };
+    slotQuery.parkingLot = { $in: lotIds };
+    bookingQuery.parkingLot = { $in: lotIds };
+  }
+
+  const todayBookingQuery = {
+    ...bookingQuery,
+    createdAt: { $gte: startOfToday },
+  };
+
+  const completedBookingMatch = {
+    ...bookingQuery,
+    status: 'completed',
+  };
 
   const [
     totalParkingLots,
@@ -24,21 +49,30 @@ export const getOverview = asyncHandler(async (req, res) => {
     todayBookings,
     completedBookingsSum,
   ] = await Promise.all([
-    ParkingLot.countDocuments(),
-    ParkingLot.countDocuments({ isActive: true }),
-    ParkingSlot.countDocuments(),
-    ParkingSlot.countDocuments({ status: 'available' }),
-    ParkingSlot.countDocuments({ status: 'occupied' }),
-    Booking.countDocuments(),
-    Booking.countDocuments({ status: 'confirmed' }),
-    Booking.countDocuments({ createdAt: { $gte: startOfToday } }),
+    ParkingLot.countDocuments(lotQuery),
+    ParkingLot.countDocuments({ ...lotQuery, isActive: true }),
+    ParkingSlot.countDocuments(slotQuery),
+    ParkingSlot.countDocuments({ ...slotQuery, status: 'available' }),
+    ParkingSlot.countDocuments({ ...slotQuery, status: 'occupied' }),
+    Booking.countDocuments(bookingQuery),
+    Booking.countDocuments({ ...bookingQuery, status: 'confirmed' }),
+    Booking.countDocuments(todayBookingQuery),
     Booking.aggregate([
-      { $match: { status: 'completed' } },
-      { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+      { $match: completedBookingMatch },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$totalAmount' },
+          platformFee: { $sum: '$platformFee' },
+          ownerEarning: { $sum: '$ownerEarning' },
+        },
+      },
     ]),
   ]);
 
   const totalRevenue = completedBookingsSum.length > 0 ? completedBookingsSum[0].total : 0;
+  const platformFee = completedBookingsSum.length > 0 ? completedBookingsSum[0].platformFee : 0;
+  const ownerEarning = completedBookingsSum.length > 0 ? completedBookingsSum[0].ownerEarning : 0;
 
   return res.status(200).json(
     new ApiResponse(
@@ -53,6 +87,8 @@ export const getOverview = asyncHandler(async (req, res) => {
         confirmedBookings,
         todayBookings,
         totalRevenue,
+        platformFee,
+        ownerEarning,
       },
       'Overview statistics retrieved successfully'
     )
@@ -60,8 +96,11 @@ export const getOverview = asyncHandler(async (req, res) => {
 });
 
 export const getRevenue = asyncHandler(async (req, res) => {
-  if (req.user.role !== 'admin') {
-    throw new ApiError(403, 'Forbidden: Admin access required');
+  const isSuperAdmin = req.user.role === 'superAdmin';
+  const isOwner = req.user.role === 'owner';
+
+  if (!isSuperAdmin && !isOwner) {
+    throw new ApiError(403, 'Forbidden: Unauthorized access');
   }
 
   const { period } = req.query;
@@ -77,22 +116,44 @@ export const getRevenue = asyncHandler(async (req, res) => {
     startDate.setDate(startDate.getDate() - 30);
   }
 
+  const bookingQuery = {};
+  if (isOwner) {
+    const ownerLots = await ParkingLot.find({ owner: req.user._id });
+    const lotIds = ownerLots.map((lot) => lot._id);
+    bookingQuery.parkingLot = { $in: lotIds };
+  }
+
+  const totalRevenueMatch = {
+    ...bookingQuery,
+    status: 'completed',
+  };
+
+  const chartMatch = {
+    ...bookingQuery,
+    status: 'completed',
+    createdAt: { $gte: startDate },
+  };
+
   const [totalRevenueResult, chartData] = await Promise.all([
     Booking.aggregate([
-      { $match: { status: 'completed' } },
-      { $group: { _id: null, total: { $sum: '$totalAmount' } } },
-    ]),
-    Booking.aggregate([
+      { $match: totalRevenueMatch },
       {
-        $match: {
-          status: 'completed',
-          createdAt: { $gte: startDate },
+        $group: {
+          _id: null,
+          total: { $sum: '$totalAmount' },
+          platformFee: { $sum: '$platformFee' },
+          ownerEarning: { $sum: '$ownerEarning' },
         },
       },
+    ]),
+    Booking.aggregate([
+      { $match: chartMatch },
       {
         $group: {
           _id: { $dateToString: { format, date: '$createdAt' } },
           revenue: { $sum: '$totalAmount' },
+          platformFee: { $sum: '$platformFee' },
+          ownerEarning: { $sum: '$ownerEarning' },
           bookingsCount: { $sum: 1 },
         },
       },
@@ -101,13 +162,19 @@ export const getRevenue = asyncHandler(async (req, res) => {
   ]);
 
   const totalRevenue = totalRevenueResult.length > 0 ? totalRevenueResult[0].total : 0;
+  const platformFee = totalRevenueResult.length > 0 ? totalRevenueResult[0].platformFee : 0;
+  const ownerEarning = totalRevenueResult.length > 0 ? totalRevenueResult[0].ownerEarning : 0;
 
   const result = {
     totalRevenue,
+    platformFee,
+    ownerEarning,
     period: period || 'month',
     chartData: chartData.map((item) => ({
       label: item._id,
       revenue: item.revenue,
+      platformFee: item.platformFee,
+      ownerEarning: item.ownerEarning,
       bookingsCount: item.bookingsCount,
     })),
   };
@@ -118,11 +185,19 @@ export const getRevenue = asyncHandler(async (req, res) => {
 });
 
 export const getOccupancy = asyncHandler(async (req, res) => {
-  if (req.user.role !== 'admin') {
-    throw new ApiError(403, 'Forbidden: Admin access required');
+  const isSuperAdmin = req.user.role === 'superAdmin';
+  const isOwner = req.user.role === 'owner';
+
+  if (!isSuperAdmin && !isOwner) {
+    throw new ApiError(403, 'Forbidden: Unauthorized access');
   }
 
-  const activeLots = await ParkingLot.find({ isActive: true });
+  const lotQuery = { isActive: true };
+  if (isOwner) {
+    lotQuery.owner = req.user._id;
+  }
+
+  const activeLots = await ParkingLot.find(lotQuery);
 
   const occupancy = await Promise.all(
     activeLots.map(async (lot) => {
@@ -151,11 +226,21 @@ export const getOccupancy = asyncHandler(async (req, res) => {
 });
 
 export const getRecentBookings = asyncHandler(async (req, res) => {
-  if (req.user.role !== 'admin') {
-    throw new ApiError(403, 'Forbidden: Admin access required');
+  const isSuperAdmin = req.user.role === 'superAdmin';
+  const isOwner = req.user.role === 'owner';
+
+  if (!isSuperAdmin && !isOwner) {
+    throw new ApiError(403, 'Forbidden: Unauthorized access');
   }
 
-  const recentBookings = await Booking.find()
+  const bookingQuery = {};
+  if (isOwner) {
+    const ownerLots = await ParkingLot.find({ owner: req.user._id });
+    const lotIds = ownerLots.map((lot) => lot._id);
+    bookingQuery.parkingLot = { $in: lotIds };
+  }
+
+  const recentBookings = await Booking.find(bookingQuery)
     .populate('user', 'name email')
     .populate('vehicle', 'type brand model registrationNumber color')
     .populate('parkingLot', 'name address city')

@@ -7,6 +7,9 @@ const Header = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
+    const confirmLogout = window.confirm('Are you sure you want to logout?');
+    if (!confirmLogout) return;
+
     try {
       await logoutUser();
       navigate('/login');
@@ -27,31 +30,16 @@ const Header = () => {
           <Link to="/" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
             Home
           </Link>
-          <Link to="/parking-lots" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-            Parking Lots
-          </Link>
-          <Link to="/my-bookings" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-            My Bookings
-          </Link>
-          <Link to="/vehicles" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-            Vehicles
-          </Link>
 
-          {/* Conditional Admin Links */}
-          {isAuthenticated && user?.role === 'admin' && (
-            <>
-              <Link to="/admin" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-                Admin
-              </Link>
-              <Link to="/admin/qr-verify" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-                QR Verify
-              </Link>
-            </>
-          )}
-
-          {/* Conditional Auth Links */}
+          {/* If user is NOT logged in */}
           {!isAuthenticated ? (
             <>
+              <Link to="/parking-lots" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                Parking Lots
+              </Link>
+              <Link to="/register?role=owner" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                List Your Parking
+              </Link>
               <Link to="/login" className="text-sm font-medium text-slate-300 hover:text-blue-400 transition-colors">
                 Login
               </Link>
@@ -60,20 +48,46 @@ const Header = () => {
               </Link>
             </>
           ) : (
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-slate-400 font-medium">
-                Hi, <Link to="/profile" className="text-slate-200 hover:underline">{user?.name}</Link>
-              </span>
+            /* If user IS logged in */
+            <>
+              <Link to="/vehicles" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                Vehicles
+              </Link>
+              <Link to="/parking-lots" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                Parking Lots
+              </Link>
+              <Link to="/my-bookings" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                My Bookings
+              </Link>
               <Link to="/profile" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
                 Profile
               </Link>
-              <button
-                onClick={handleLogout}
-                className="bg-slate-800 hover:bg-slate-700 text-red-400 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-colors border border-slate-700"
-              >
-                Logout
-              </button>
-            </div>
+
+              {/* If owner or superAdmin */}
+              {(user?.role === 'owner' || user?.role === 'superAdmin') && (
+                <>
+                  <Link to="/admin" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                    Admin
+                  </Link>
+                  <Link to="/admin/qr-verify" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                    QR Verify
+                  </Link>
+                </>
+              )}
+
+              {/* Greeting and Logout */}
+              <div className="flex items-center space-x-4 border-l border-slate-800 pl-4">
+                <span className="text-sm text-slate-400 font-medium select-none">
+                  Hi, {user?.name}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="bg-slate-800 hover:bg-slate-700 text-red-400 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-colors border border-slate-700"
+                >
+                  Logout
+                </button>
+              </div>
+            </>
           )}
         </nav>
       </div>

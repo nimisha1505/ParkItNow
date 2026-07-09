@@ -82,6 +82,24 @@ const bookingSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
+    platformFee: {
+      type: Number,
+      default: 0,
+    },
+    ownerEarning: {
+      type: Number,
+      default: 0,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'paid', 'failed', 'refunded'],
+      default: 'pending',
+    },
+    payoutStatus: {
+      type: String,
+      enum: ['pending', 'processed'],
+      default: 'pending',
+    },
   },
   { timestamps: true }
 );
