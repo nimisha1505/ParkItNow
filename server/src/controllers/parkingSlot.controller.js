@@ -6,19 +6,6 @@ import { ApiError } from '../utils/apiError.js';
 import { ApiResponse } from '../utils/apiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
-const getIsAdmin = async (req) => {
-  try {
-    const token = req.cookies?.accessToken || req.header('Authorization')?.replace('Bearer ', '');
-    if (!token) return false;
-
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || 'access-secret');
-    const user = await User.findById(decoded._id);
-    return user && user.role === 'admin';
-  } catch (error) {
-    return false;
-  }
-};
-
 const syncParkingLotSlots = async (parkingLotId) => {
   const totalSlots = await ParkingSlot.countDocuments({ parkingLot: parkingLotId });
   const availableSlots = await ParkingSlot.countDocuments({ parkingLot: parkingLotId, status: 'available' });
@@ -26,15 +13,18 @@ const syncParkingLotSlots = async (parkingLotId) => {
 };
 
 export const createParkingSlot = asyncHandler(async (req, res) => {
-  if (req.user.role !== 'admin') {
-    throw new ApiError(403, 'Forbidden: Admin access required');
-  }
-
   const { parkingLot, slotNumber } = req.body;
 
   const lot = await ParkingLot.findById(parkingLot);
   if (!lot) {
     throw new ApiError(404, 'Parking lot not found');
+  }
+
+  const isSuperAdmin = req.user.role === 'superAdmin';
+  const isOwner = req.user.role === 'owner' && lot.owner && lot.owner.toString() === req.user._id.toString();
+
+  if (!isSuperAdmin && !isOwner) {
+    throw new ApiError(403, 'Forbidden: You do not have permission to manage slots for this parking lot');
   }
 
   const existingSlot = await ParkingSlot.findOne({ parkingLot, slotNumber });
@@ -56,37 +46,53 @@ export const createParkingSlot = asyncHandler(async (req, res) => {
 
 export const getParkingSlots = asyncHandler(async (req, res) => {
   const { parkingLotId, vehicleType, floor, section, status } = req.query;
-  const isAdmin = await getIsAdmin(req);
+
+  let currentUser = null;
+  try {
+    const token = req.cookies?.accessToken || req.header('Authorization')?.replace('Bearer ', '');
+    if (token) {
+      const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || 'access-secret');
+      currentUser = await User.findById(decoded._id);
+    }
+  } catch (error) {
+    // Ignore invalid/missing token
+  }
 
   const query = {};
 
-  if (!isAdmin) {
-    const activeLots = await ParkingLot.find({ isActive: true }).select('_id');
-    const activeLotIds = activeLots.map((l) => l._id.toString());
+  if (parkingLotId) {
+    const lot = await ParkingLot.findById(parkingLotId);
+    if (!lot) {
+      throw new ApiError(404, 'Parking lot not found');
+    }
 
-    if (parkingLotId) {
-      if (activeLotIds.includes(parkingLotId)) {
-        query.parkingLot = parkingLotId;
-      } else {
+    const isSuperAdmin = currentUser?.role === 'superAdmin';
+    const isOwner = currentUser?.role === 'owner' && lot.owner && lot.owner.toString() === currentUser._id.toString();
+
+    if (!isSuperAdmin && !isOwner) {
+      if (lot.approvalStatus !== 'approved' || !lot.isActive) {
         return res
           .status(200)
           .json(new ApiResponse(200, [], 'Parking slots retrieved successfully'));
       }
+      query.status = status || 'available';
     } else {
-      query.parkingLot = { $in: activeLots.map((l) => l._id) };
+      if (status) {
+        query.status = status;
+      }
     }
-
-    if (!status) {
-      query.status = 'available';
-    } else {
-      query.status = status;
-    }
+    query.parkingLot = parkingLotId;
   } else {
-    if (parkingLotId) {
-      query.parkingLot = parkingLotId;
-    }
-    if (status) {
-      query.status = status;
+    const isSuperAdmin = currentUser?.role === 'superAdmin';
+    if (!isSuperAdmin) {
+      const activeLots = await ParkingLot.find({ approvalStatus: 'approved', isActive: true }).select('_id');
+      const activeLotIds = activeLots.map((l) => l._id);
+      query.parkingLot = { $in: activeLotIds };
+      query.status = status || 'available';
+    } else {
+      if (status) {
+        query.status = status;
+      }
     }
   }
 
@@ -109,15 +115,30 @@ export const getParkingSlots = asyncHandler(async (req, res) => {
 
 export const getParkingSlotById = asyncHandler(async (req, res) => {
   const { slotId } = req.params;
-  const isAdmin = await getIsAdmin(req);
+
+  let currentUser = null;
+  try {
+    const token = req.cookies?.accessToken || req.header('Authorization')?.replace('Bearer ', '');
+    if (token) {
+      const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || 'access-secret');
+      currentUser = await User.findById(decoded._id);
+    }
+  } catch (error) {
+    // Ignore invalid/missing token
+  }
 
   const slot = await ParkingSlot.findById(slotId).populate('parkingLot');
   if (!slot) {
     throw new ApiError(404, 'Parking slot not found');
   }
 
-  if (!isAdmin && (!slot.parkingLot || !slot.parkingLot.isActive)) {
-    throw new ApiError(404, 'Parking slot not found');
+  const isSuperAdmin = currentUser?.role === 'superAdmin';
+  const isOwner = currentUser?.role === 'owner' && slot.parkingLot && slot.parkingLot.owner && slot.parkingLot.owner.toString() === currentUser._id.toString();
+
+  if (!isSuperAdmin && !isOwner) {
+    if (!slot.parkingLot || slot.parkingLot.approvalStatus !== 'approved' || !slot.parkingLot.isActive) {
+      throw new ApiError(404, 'Parking slot not found');
+    }
   }
 
   return res
@@ -126,14 +147,22 @@ export const getParkingSlotById = asyncHandler(async (req, res) => {
 });
 
 export const updateParkingSlot = asyncHandler(async (req, res) => {
-  if (req.user.role !== 'admin') {
-    throw new ApiError(403, 'Forbidden: Admin access required');
-  }
-
   const { slotId } = req.params;
   const slot = await ParkingSlot.findById(slotId);
   if (!slot) {
     throw new ApiError(404, 'Parking slot not found');
+  }
+
+  const lot = await ParkingLot.findById(slot.parkingLot);
+  if (!lot) {
+    throw new ApiError(404, 'Associated parking lot not found');
+  }
+
+  const isSuperAdmin = req.user.role === 'superAdmin';
+  const isOwner = req.user.role === 'owner' && lot.owner && lot.owner.toString() === req.user._id.toString();
+
+  if (!isSuperAdmin && !isOwner) {
+    throw new ApiError(403, 'Forbidden: You do not have permission to manage slots for this parking lot');
   }
 
   const { slotNumber, parkingLot } = req.body;
@@ -173,14 +202,22 @@ export const updateParkingSlot = asyncHandler(async (req, res) => {
 });
 
 export const deleteParkingSlot = asyncHandler(async (req, res) => {
-  if (req.user.role !== 'admin') {
-    throw new ApiError(403, 'Forbidden: Admin access required');
-  }
-
   const { slotId } = req.params;
   const slot = await ParkingSlot.findById(slotId);
   if (!slot) {
     throw new ApiError(404, 'Parking slot not found');
+  }
+
+  const lot = await ParkingLot.findById(slot.parkingLot);
+  if (!lot) {
+    throw new ApiError(404, 'Associated parking lot not found');
+  }
+
+  const isSuperAdmin = req.user.role === 'superAdmin';
+  const isOwner = req.user.role === 'owner' && lot.owner && lot.owner.toString() === req.user._id.toString();
+
+  if (!isSuperAdmin && !isOwner) {
+    throw new ApiError(403, 'Forbidden: You do not have permission to manage slots for this parking lot');
   }
 
   await ParkingSlot.findByIdAndDelete(slotId);

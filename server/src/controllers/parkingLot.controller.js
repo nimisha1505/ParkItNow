@@ -31,7 +31,7 @@ export const createParkingLot = asyncHandler(async (req, res) => {
 });
 
 export const getParkingLots = asyncHandler(async (req, res) => {
-  const { city, area, vehicleType, minPrice, maxPrice } = req.query;
+  const { city, area, vehicleType, minPrice, maxPrice, approvalStatus, myLots } = req.query;
 
   let currentUser = null;
   try {
@@ -64,16 +64,13 @@ export const getParkingLots = asyncHandler(async (req, res) => {
     }
   }
 
-  if (!currentUser || currentUser.role !== 'superAdmin') {
-    if (currentUser && currentUser.role === 'owner') {
-      query.$or = [
-        { owner: currentUser._id },
-        { approvalStatus: 'approved', isActive: true }
-      ];
-    } else {
-      query.approvalStatus = 'approved';
-      query.isActive = true;
-    }
+  if (myLots === 'true' && currentUser) {
+    query.owner = currentUser._id;
+  } else if (approvalStatus === 'pending' && currentUser?.role === 'superAdmin') {
+    query.approvalStatus = 'pending';
+  } else {
+    query.approvalStatus = 'approved';
+    query.isActive = true;
   }
 
   const parkingLots = await ParkingLot.find(query);

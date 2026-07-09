@@ -14,6 +14,8 @@ import Vehicles from '../pages/Vehicles.jsx';
 import Profile from '../pages/Profile.jsx';
 import ListParking from '../pages/ListParking.jsx';
 import ParkingApprovals from '../pages/ParkingApprovals.jsx';
+import OwnerParkings from '../pages/OwnerParkings.jsx';
+import OwnerSlots from '../pages/OwnerSlots.jsx';
 import NotFound from '../pages/NotFound.jsx';
 
 const AppRoutes = () => {
@@ -30,6 +32,8 @@ const AppRoutes = () => {
         <Route path="vehicles" element={<Vehicles />} />
         <Route path="profile" element={<Profile />} />
         <Route path="list-parking" element={<ListParking />} />
+        <Route path="owner/parkings" element={<OwnerParkings />} />
+        <Route path="owner/parkings/:parkingLotId/slots" element={<OwnerSlots />} />
         <Route path="admin" element={<AdminDashboard />} />
         <Route path="admin/qr-verify" element={<AdminQRVerify />} />
         <Route path="admin/parking-approvals" element={<ParkingApprovals />} />

@@ -11,10 +11,10 @@ const ParkingApprovals = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosClient.get('/parking-lots');
-      const allLots = response.data.data || [];
-      const pending = allLots.filter((lot) => lot.approvalStatus === 'pending');
-      setPendingLots(pending);
+      const response = await axiosClient.get('/parking-lots', {
+        params: { approvalStatus: 'pending' },
+      });
+      setPendingLots(response.data.data || []);
     } catch (err) {
       console.error('Fetch approvals error:', err);
       const status = err.response?.status;
@@ -36,7 +36,7 @@ const ParkingApprovals = () => {
     setError(null);
     try {
       await axiosClient.patch(`/parking-lots/${id}/approve`);
-      setPendingLots((prev) => prev.filter((lot) => lot._id !== id));
+      await fetchPendingLots();
     } catch (err) {
       console.error('Approve error:', err);
       const status = err.response?.status;
@@ -52,7 +52,7 @@ const ParkingApprovals = () => {
     setError(null);
     try {
       await axiosClient.patch(`/parking-lots/${id}/reject`);
-      setPendingLots((prev) => prev.filter((lot) => lot._id !== id));
+      await fetchPendingLots();
     } catch (err) {
       console.error('Reject error:', err);
       const status = err.response?.status;

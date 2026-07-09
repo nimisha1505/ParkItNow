@@ -8,6 +8,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
+    "seed:parking": "node src/seeds/parking.seed.js",
     "lint": "eslint ."
   },
   "dependencies": {

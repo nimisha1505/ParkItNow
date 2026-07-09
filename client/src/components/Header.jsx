@@ -74,9 +74,12 @@ const Header = () => {
                 </Link>
               )}
 
-              {/* If owner or superAdmin, also show admin dashboard and verification links */}
+              {/* If owner or superAdmin, also show admin dashboard, my parkings, and verification links */}
               {(user?.role === 'owner' || user?.role === 'superAdmin') && (
                 <>
+                  <Link to="/owner/parkings" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                    My Parkings
+                  </Link>
                   <Link to="/admin" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
                     Admin
                   </Link>
