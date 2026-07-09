@@ -94,15 +94,26 @@ const ParkingLots = () => {
   };
 
   useEffect(() => {
-    fetchLots();
+    // Do not fetch lots by default on load
+    setParkingLots([]);
   }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFilters((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFilters((prev) => {
+      const updated = {
+        ...prev,
+        [name]: value,
+      };
+      if (name === 'city') {
+        if (value) {
+          fetchLots(updated);
+        } else {
+          setParkingLots([]);
+        }
+      }
+      return updated;
+    });
   };
 
   const handleSearch = (e) => {
@@ -127,7 +138,7 @@ const ParkingLots = () => {
       <div>
         <h2 className="text-3xl font-extrabold text-slate-100 flex items-center space-x-2">
           <Compass className="h-8 w-8 text-emerald-400" />
-          <span>Find Parking Near You</span>
+          <span>{filters.city ? `Parking lots in ${filters.city}` : "Find Parking Near You"}</span>
         </h2>
         <p className="text-slate-400 mt-2">
           Discover premium, secure parking hubs tailored to your vehicle specifications.
@@ -147,9 +158,17 @@ const ParkingLots = () => {
               onChange={handleChange}
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
             >
-              <option value="">Any City</option>
+              <option value="">Select City</option>
               <option value="Gwalior">Gwalior</option>
               <option value="Indore">Indore</option>
+              <option value="Bhopal">Bhopal</option>
+              <option value="Jabalpur">Jabalpur</option>
+              <option value="Ujjain">Ujjain</option>
+              <option value="Sagar">Sagar</option>
+              <option value="Rewa">Rewa</option>
+              <option value="Satna">Satna</option>
+              <option value="Dewas">Dewas</option>
+              <option value="Ratlam">Ratlam</option>
             </select>
           </div>
           <div>
@@ -215,7 +234,11 @@ const ParkingLots = () => {
       )}
 
       {/* Parking Lot Cards */}
-      {loading && parkingLots.length === 0 ? (
+      {!filters.city ? (
+        <div className="bg-slate-800 border border-slate-700 p-8 rounded-xl text-center text-slate-400">
+          Please select a city to view parking spaces.
+        </div>
+      ) : loading && parkingLots.length === 0 ? (
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500"></div>
         </div>
@@ -243,9 +266,47 @@ const ParkingLots = () => {
                     <MapPin className="h-4 w-4 text-slate-500" />
                     <span className="capitalize">{lot.area}, {lot.city}</span>
                   </p>
-                  <p className="text-2xl font-extrabold text-blue-400">
-                    ₹{lot.pricePerHour} <span className="text-sm font-medium text-slate-500">/ hour</span>
-                  </p>
+                  <div className="flex justify-between items-end">
+                    <p className="text-2xl font-extrabold text-blue-400">
+                      ₹{lot.pricePerHour} <span className="text-sm font-medium text-slate-500">/ hour</span>
+                    </p>
+                  </div>
+
+                  {/* Category-based Pricing */}
+                  <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-700/30 text-xs space-y-1.5 mt-2">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400 font-semibold">2-Wheeler:</span>
+                      <strong className="text-emerald-400">₹{lot.pricePerHourByVehicleCategory?.twoWheeler || Math.round(lot.pricePerHour * 0.4)}/hr</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400 font-semibold">4-Wheeler:</span>
+                      <strong className="text-emerald-400">₹{lot.pricePerHourByVehicleCategory?.fourWheeler || lot.pricePerHour}/hr</strong>
+                    </div>
+                  </div>
+
+                  {/* EV Charging Info */}
+                  {lot.evCharging?.available && (
+                    <div className="bg-emerald-950/20 border border-emerald-800/30 p-3 rounded-lg text-xs space-y-1.5 mt-2">
+                      <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                        ⚡ EV Charging Available
+                      </span>
+                      {lot.evCharging.pricePerHour > 0 && (
+                        <div className="text-slate-300">
+                          Charging Price: <strong className="text-emerald-400">₹{lot.evCharging.pricePerHour}/hr</strong>
+                        </div>
+                      )}
+                      {lot.evCharging.connectorTypes && lot.evCharging.connectorTypes.length > 0 && (
+                        <div className="text-slate-400 flex flex-wrap gap-1 mt-1">
+                          <span className="text-[10px] text-slate-500 font-semibold uppercase block">Connectors:</span>
+                          {lot.evCharging.connectorTypes.map((type) => (
+                            <span key={type} className="bg-slate-900 text-slate-350 text-[10px] px-1.5 py-0.5 rounded border border-slate-800">
+                              {type}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Supported Vehicle Types */}

@@ -53,6 +53,22 @@ const parkingLotSchema = new mongoose.Schema(
       required: [true, 'Price per hour is required'],
       min: [0, 'Price cannot be negative'],
     },
+    pricePerHourByVehicleType: {
+      car: { type: Number, default: 0 },
+      bike: { type: Number, default: 0 },
+      scooter: { type: Number, default: 0 },
+      ev: { type: Number, default: 0 },
+    },
+    pricePerHourByVehicleCategory: {
+      twoWheeler: { type: Number, default: 0 },
+      fourWheeler: { type: Number, default: 0 },
+    },
+    evCharging: {
+      available: { type: Boolean, default: false },
+      chargingSlots: { type: Number, default: 0 },
+      pricePerHour: { type: Number, default: 0 },
+      connectorTypes: { type: [String], default: [] },
+    },
     supportedVehicleTypes: {
       type: [String],
       enum: ['car', 'bike', 'scooter', 'ev'],

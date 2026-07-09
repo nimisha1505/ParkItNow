@@ -201,10 +201,17 @@ const ParkingSlots = () => {
             <MapPin className="h-4 w-4 text-slate-500 mt-0.5" />
             <span>{currentLot.area || 'N/A'}, {currentLot.city || 'N/A'}</span>
           </p>
+          <div className="pt-2 text-xs flex flex-wrap gap-4 text-slate-400">
+            <span>2-Wheeler: <strong className="text-slate-200">₹{currentLot.pricePerHourByVehicleCategory?.twoWheeler || Math.round(currentLot.pricePerHour * 0.4)}</strong>/hr</span>
+            <span>4-Wheeler: <strong className="text-slate-200">₹{currentLot.pricePerHourByVehicleCategory?.fourWheeler || currentLot.pricePerHour}</strong>/hr</span>
+            {currentLot.evCharging?.available && (
+              <span className="text-emerald-400 font-medium">⚡ EV Charging: <strong className="text-emerald-350">₹{currentLot.evCharging.pricePerHour}</strong>/hr ({currentLot.evCharging.connectorTypes?.join(', ') || 'N/A'})</span>
+            )}
+          </div>
           <div className="pt-2">
             <button
               onClick={() => handleGetDirections(currentLot)}
-              className="bg-slate-900 hover:bg-slate-750 border border-slate-700 text-slate-350 font-bold px-3.5 py-1.5 rounded-lg transition-colors text-xs flex items-center gap-1.5"
+              className="bg-slate-900 hover:bg-slate-750 border border-slate-700 text-slate-355 font-bold px-3.5 py-1.5 rounded-lg transition-colors text-xs flex items-center gap-1.5"
             >
               <Navigation className="w-3.5 h-3.5 text-emerald-400" />
               <span>Get Directions</span>
@@ -213,8 +220,40 @@ const ParkingSlots = () => {
         </div>
         <div className="text-right">
           <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider block">Price Rate</span>
-          <span className="text-2xl font-extrabold text-blue-400">₹{currentLot.pricePerHour}</span>
+          <span className="text-2xl font-extrabold text-blue-400">
+            ₹{
+              (() => {
+                const selectedVehicleObj = vehicles.find((v) => v._id === formData.vehicleId || v.id === formData.vehicleId);
+                const type = selectedVehicleObj?.type || 'car';
+                let cat = '';
+                if (['bike', 'scooter'].includes(type)) {
+                  cat = 'twoWheeler';
+                } else if (['car', 'ev'].includes(type)) {
+                  cat = 'fourWheeler';
+                }
+                if (cat && currentLot.pricePerHourByVehicleCategory?.[cat]) {
+                  return currentLot.pricePerHourByVehicleCategory[cat];
+                }
+                return currentLot.pricePerHourByVehicleType?.[type] || currentLot.pricePerHour;
+              })()
+            }
+          </span>
           <span className="text-xs text-slate-400"> / hr</span>
+          <span className="text-[10px] text-slate-500 block uppercase font-bold">
+            ({
+              (() => {
+                const selectedVehicleObj = vehicles.find((v) => v._id === formData.vehicleId || v.id === formData.vehicleId);
+                const type = selectedVehicleObj?.type || 'car';
+                let cat = '';
+                if (['bike', 'scooter'].includes(type)) {
+                  cat = 'twoWheeler';
+                } else if (['car', 'ev'].includes(type)) {
+                  cat = 'fourWheeler';
+                }
+                return cat === 'twoWheeler' ? '2-Wheeler' : '4-Wheeler';
+              })()
+            } Rate)
+          </span>
         </div>
       </div>
 

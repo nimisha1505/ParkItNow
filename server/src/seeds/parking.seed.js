@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
 // Load environment variables using absolute path
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-const DB_GWALIOR_LOTS = [
+const BASE_GWALIOR_LOTS = [
   {
     name: 'DB City Mall Parking',
     address: 'DB City Mall, Race Course Road, City Centre',
@@ -21,7 +21,6 @@ const DB_GWALIOR_LOTS = [
     area: 'City Centre',
     landmark: 'Near Gwalior Railway Station',
     coordinates: { lat: 26.2312, lng: 78.2012 },
-    pricePerHour: 40,
     supportedVehicleTypes: ['car', 'bike', 'scooter', 'ev'],
     amenities: ['CCTV', 'Covered', 'EV Charger', 'Valet', '24/7 Access', 'Restrooms'],
   },
@@ -32,8 +31,7 @@ const DB_GWALIOR_LOTS = [
     area: 'Maharaj Bada',
     landmark: 'Opposite State Bank of India',
     coordinates: { lat: 26.2235, lng: 78.1965 },
-    pricePerHour: 30,
-    supportedVehicleTypes: ['car', 'bike', 'scooter'],
+    supportedVehicleTypes: ['car', 'bike', 'scooter', 'ev'],
     amenities: ['CCTV', 'Covered', 'Restrooms'],
   },
   {
@@ -43,8 +41,7 @@ const DB_GWALIOR_LOTS = [
     area: 'Station Area',
     landmark: 'Platform 1 Gate',
     coordinates: { lat: 26.2178, lng: 78.1884 },
-    pricePerHour: 20,
-    supportedVehicleTypes: ['car', 'bike', 'scooter'],
+    supportedVehicleTypes: ['car', 'bike', 'scooter', 'ev'],
     amenities: ['CCTV', '24/7 Access', 'Restrooms'],
   },
   {
@@ -54,8 +51,7 @@ const DB_GWALIOR_LOTS = [
     area: 'Fort Area',
     landmark: 'Near Man Singh Palace Entrance',
     coordinates: { lat: 26.2295, lng: 78.1705 },
-    pricePerHour: 30,
-    supportedVehicleTypes: ['car', 'bike', 'scooter'],
+    supportedVehicleTypes: ['car', 'bike', 'scooter', 'ev'],
     amenities: ['CCTV', 'Restrooms'],
   },
   {
@@ -65,7 +61,6 @@ const DB_GWALIOR_LOTS = [
     area: 'Phool Bagh',
     landmark: 'Near Gwalior Zoo Main Gate',
     coordinates: { lat: 26.2198, lng: 78.1842 },
-    pricePerHour: 15,
     supportedVehicleTypes: ['car', 'bike', 'scooter', 'ev'],
     amenities: ['CCTV', 'EV Charger', '24/7 Access'],
   },
@@ -76,8 +71,7 @@ const DB_GWALIOR_LOTS = [
     area: 'Lashkar',
     landmark: 'Opposite Central Library',
     coordinates: { lat: 26.2084, lng: 78.1632 },
-    pricePerHour: 25,
-    supportedVehicleTypes: ['car', 'bike', 'scooter'],
+    supportedVehicleTypes: ['car', 'bike', 'scooter', 'ev'],
     amenities: ['CCTV', 'Restrooms'],
   },
   {
@@ -87,7 +81,6 @@ const DB_GWALIOR_LOTS = [
     area: 'City Centre',
     landmark: 'Next to HDFC Bank Regional Office',
     coordinates: { lat: 26.2242, lng: 78.2045 },
-    pricePerHour: 35,
     supportedVehicleTypes: ['car', 'bike', 'scooter', 'ev'],
     amenities: ['CCTV', 'Covered', 'EV Charger', '24/7 Access', 'Restrooms'],
   },
@@ -98,58 +91,72 @@ const DB_GWALIOR_LOTS = [
     area: 'Maharaj Bada',
     landmark: 'Underground public facility',
     coordinates: { lat: 26.2052, lng: 78.1584 },
-    pricePerHour: 20,
-    supportedVehicleTypes: ['car', 'bike', 'scooter'],
+    supportedVehicleTypes: ['car', 'bike', 'scooter', 'ev'],
     amenities: ['CCTV', 'Covered', 'Restrooms'],
   },
 ];
 
-const DB_INDORE_LOTS = [
-  {
-    name: 'Phoenix Citadel Mall Parking',
-    address: 'Phoenix Citadel, MR 10 Road',
-    city: 'Indore',
-    area: 'Vijay Nagar Area',
-    landmark: 'Next to Bypass Highway Junction',
-    coordinates: { lat: 22.7485, lng: 75.9462 },
-    pricePerHour: 50,
-    supportedVehicleTypes: ['car', 'bike', 'scooter', 'ev'],
-    amenities: ['CCTV', 'Covered', 'EV Charger', 'Valet', '24/7 Access', 'Restrooms'],
-  },
-  {
-    name: 'Treasure Island Mall Parking',
-    address: '11 MG Road, South Tukoganj',
-    city: 'Indore',
-    area: 'MG Road',
-    landmark: 'Near Indraprastha Tower',
-    coordinates: { lat: 22.7214, lng: 75.8795 },
-    pricePerHour: 40,
-    supportedVehicleTypes: ['car', 'bike', 'scooter'],
-    amenities: ['CCTV', 'Covered', 'Valet', 'Restrooms'],
-  },
-  {
-    name: 'C21 Malhar Mall Parking',
-    address: 'AB Road, Vijay Nagar Sector A',
-    city: 'Indore',
-    area: 'Vijay Nagar',
-    landmark: 'Near Radisson Blu Junction',
-    coordinates: { lat: 22.7441, lng: 75.8926 },
-    pricePerHour: 45,
-    supportedVehicleTypes: ['car', 'bike', 'scooter', 'ev'],
-    amenities: ['CCTV', 'Covered', 'EV Charger', 'Restrooms'],
-  },
-  {
-    name: 'Vijay Nagar Public Parking',
-    address: 'Vijay Nagar Square, AB Road',
-    city: 'Indore',
-    area: 'Vijay Nagar',
-    landmark: 'Behind Vijay Nagar Police Station',
-    coordinates: { lat: 22.7533, lng: 75.8937 },
-    pricePerHour: 25,
-    supportedVehicleTypes: ['car', 'bike', 'scooter', 'ev'],
-    amenities: ['CCTV', '24/7 Access', 'Restrooms'],
-  },
+// Seed arrays for other cities: 3 lots per city
+const OTHER_MP_CITIES = [
+  'Indore', 'Bhopal', 'Jabalpur', 'Ujjain', 'Sagar', 'Rewa', 'Satna', 'Dewas', 'Ratlam'
 ];
+
+const generateLotsArray = () => {
+  const lots = [...BASE_GWALIOR_LOTS];
+
+  OTHER_MP_CITIES.forEach((cityName, cityIdx) => {
+    // Generate 3 lots per city
+    for (let lotIdx = 1; lotIdx <= 3; lotIdx++) {
+      lots.push({
+        name: `${cityName} Premium Lot ${lotIdx}`,
+        address: `Main Road Sector ${lotIdx}, ${cityName}`,
+        city: cityName,
+        area: `Sector ${lotIdx}`,
+        landmark: `Near Town Hall ${lotIdx}`,
+        coordinates: { lat: 22.0 + cityIdx * 0.5 + lotIdx * 0.1, lng: 75.0 + cityIdx * 0.5 + lotIdx * 0.1 },
+        supportedVehicleTypes: ['car', 'bike', 'scooter', 'ev'],
+        amenities: ['CCTV', 'Covered', '24/7 Access'],
+      });
+    }
+  });
+
+  return lots.map((lot, index) => {
+    let twoWheeler = 15;
+    let fourWheeler = 40;
+
+    if (lot.city === 'Gwalior') {
+      twoWheeler = 15 + (index % 3) * 5; // 15, 20, 25
+      fourWheeler = 40 + (index % 3) * 10; // 40, 50, 60
+    } else if (lot.city === 'Indore' || lot.city === 'Bhopal') {
+      twoWheeler = 20 + (index % 3) * 5; // 20, 25, 30
+      fourWheeler = 60 + (index % 3) * 10; // 60, 70, 80
+    } else {
+      twoWheeler = 10 + (index % 3) * 5; // 10, 15, 20
+      fourWheeler = 30 + (index % 3) * 10; // 30, 40, 50
+    }
+
+    // EV charging: True for every alternate lot
+    const isEvAvailable = index % 2 === 0;
+    const evCharging = {
+      available: isEvAvailable,
+      chargingSlots: isEvAvailable ? 2 + (index % 3) : 0,
+      pricePerHour: isEvAvailable ? 50 + (index % 4) * 20 : 0, // 50, 70, 90, 110
+      connectorTypes: isEvAvailable 
+        ? (index % 3 === 0 ? ['Type 2', 'CCS'] : index % 3 === 1 ? ['CCS', 'CHAdeMO'] : ['Type 2', 'Bharat AC001'])
+        : []
+    };
+
+    return {
+      ...lot,
+      pricePerHour: fourWheeler, // backward compatibility
+      pricePerHourByVehicleCategory: {
+        twoWheeler,
+        fourWheeler
+      },
+      evCharging
+    };
+  });
+};
 
 const seedParkingData = async () => {
   const mongoUri = process.env.MONGODB_URI;
@@ -190,7 +197,7 @@ const seedParkingData = async () => {
       console.log(`Reusing existing Demo Owner: ${ownerUser._id}`);
     }
 
-    const allLotsToSeed = [...DB_GWALIOR_LOTS, ...DB_INDORE_LOTS];
+    const allLotsToSeed = generateLotsArray();
     let totalSlotsCreatedOrUpdated = 0;
 
     for (const lotSpec of allLotsToSeed) {
@@ -209,16 +216,14 @@ const seedParkingData = async () => {
         createdBy: ownerUser._id,
       };
 
-      // 2. Use findOneAndUpdate with upsert: true based on name and city
+      // Use findOneAndUpdate with upsert: true based on name and city
       const lotDoc = await ParkingLot.findOneAndUpdate(
         lotQuery,
         { $set: updateData },
         { upsert: true, new: true, runValidators: true }
       );
 
-      console.log(`Processed parking lot: ${lotDoc.name} (${lotDoc.city}) - approvalStatus forced to approved`);
-
-      // 3. Link slots
+      // Link slots (seed 8 to 12 slots: we can seed exactly 10 slots)
       const existingSlotsCount = await ParkingSlot.countDocuments({ parkingLot: lotDoc._id });
       let lotTotalSlots = existingSlotsCount;
       let lotAvailableSlots = 0;
@@ -266,21 +271,18 @@ const seedParkingData = async () => {
     }
 
     const lotsAfter = await ParkingLot.countDocuments();
-    console.log(`parking lot count after seed: ${lotsAfter}`);
+    console.log(`total lot count after seed: ${lotsAfter}`);
 
-    const gwaliorApprovedCount = await ParkingLot.countDocuments({
-      city: 'gwalior',
-      approvalStatus: 'approved',
-      isActive: true,
-    });
-    console.log(`approved active Gwalior lot count after seed: ${gwaliorApprovedCount}`);
+    // City-wise count
+    const cities = ['Gwalior', 'Indore', 'Bhopal', 'Jabalpur', 'Ujjain', 'Sagar', 'Rewa', 'Satna', 'Dewas', 'Ratlam'];
+    for (const c of cities) {
+      const count = await ParkingLot.countDocuments({ city: c.toLowerCase() });
+      console.log(`- ${c}: ${count}`);
+    }
 
-    const indoreApprovedCount = await ParkingLot.countDocuments({
-      city: 'indore',
-      approvalStatus: 'approved',
-      isActive: true,
-    });
-    console.log(`approved active Indore lot count after seed: ${indoreApprovedCount}`);
+    // EV charging enabled lot count
+    const evEnabledCount = await ParkingLot.countDocuments({ 'evCharging.available': true });
+    console.log(`EV charging enabled lot count: ${evEnabledCount}`);
 
     console.log(`number of slots created or already existing: ${totalSlotsCreatedOrUpdated}`);
     console.log('Seeding process completed successfully!');

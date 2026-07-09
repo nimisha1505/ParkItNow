@@ -11,7 +11,12 @@ const ListParking = () => {
     landmark: '',
     lat: '',
     lng: '',
-    pricePerHour: '',
+    pricePerHourTwoWheeler: '',
+    pricePerHourFourWheeler: '',
+    evChargingAvailable: false,
+    evChargingSlots: '',
+    evChargingPricePerHour: '',
+    evConnectorTypes: [],
     supportedVehicleTypes: [],
     amenities: [],
   });
@@ -36,11 +41,18 @@ const ListParking = () => {
     'Restrooms',
   ];
 
+  const evConnectorOptions = [
+    'Type 2',
+    'CCS',
+    'CHAdeMO',
+    'Bharat AC001',
+  ];
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
@@ -63,6 +75,9 @@ const ListParking = () => {
     setError(null);
     setSuccess(false);
 
+    const twoWheelerVal = Number(formData.pricePerHourTwoWheeler) || 0;
+    const fourWheelerVal = Number(formData.pricePerHourFourWheeler) || 0;
+
     const payload = {
       name: formData.name,
       address: formData.address,
@@ -73,7 +88,17 @@ const ListParking = () => {
         lat: Number(formData.lat),
         lng: Number(formData.lng),
       },
-      pricePerHour: Number(formData.pricePerHour),
+      pricePerHour: fourWheelerVal,
+      pricePerHourByVehicleCategory: {
+        twoWheeler: twoWheelerVal,
+        fourWheeler: fourWheelerVal,
+      },
+      evCharging: {
+        available: formData.evChargingAvailable,
+        chargingSlots: formData.evChargingAvailable ? (Number(formData.evChargingSlots) || 0) : 0,
+        pricePerHour: formData.evChargingAvailable ? (Number(formData.evChargingPricePerHour) || 0) : 0,
+        connectorTypes: formData.evChargingAvailable ? formData.evConnectorTypes : [],
+      },
       supportedVehicleTypes: formData.supportedVehicleTypes,
       amenities: formData.amenities,
       totalSlots: 10,
@@ -91,7 +116,12 @@ const ListParking = () => {
         landmark: '',
         lat: '',
         lng: '',
-        pricePerHour: '',
+        pricePerHourTwoWheeler: '',
+        pricePerHourFourWheeler: '',
+        evChargingAvailable: false,
+        evChargingSlots: '',
+        evChargingPricePerHour: '',
+        evConnectorTypes: [],
         supportedVehicleTypes: [],
         amenities: [],
       });
@@ -154,45 +184,143 @@ const ListParking = () => {
           Space Specifications
         </h2>
 
-        {/* Name and Price */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Name */}
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Parking Lot Name
+          </label>
+          <input
+            type="text"
+            name="name"
+            required
+            disabled={loading}
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="e.g. Metro Square Secure Parking"
+            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50"
+          />
+        </div>
+
+        {/* Vehicle Category Prices */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/30 p-4 rounded-xl border border-slate-700/50">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">
-              Parking Lot Name
+              2-Wheeler Price Per Hour (₹)
             </label>
             <input
-              type="text"
-              name="name"
+              type="number"
+              name="pricePerHourTwoWheeler"
               required
               disabled={loading}
-              value={formData.name}
+              min="0"
+              value={formData.pricePerHourTwoWheeler}
               onChange={handleChange}
-              placeholder="e.g. Metro Square Secure Parking"
+              placeholder="e.g. 15"
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">
-              Price Per Hour (₹)
+              4-Wheeler Price Per Hour (₹)
             </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
-                <DollarSign className="w-4 h-4" />
-              </span>
-              <input
-                type="number"
-                name="pricePerHour"
-                required
-                disabled={loading}
-                min="0"
-                value={formData.pricePerHour}
-                onChange={handleChange}
-                placeholder="40"
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50"
-              />
-            </div>
+            <input
+              type="number"
+              name="pricePerHourFourWheeler"
+              required
+              disabled={loading}
+              min="0"
+              value={formData.pricePerHourFourWheeler}
+              onChange={handleChange}
+              placeholder="e.g. 40"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50"
+            />
           </div>
+        </div>
+
+        {/* EV Charging Station Support */}
+        <div className="bg-slate-900/40 p-5 rounded-xl border border-slate-700/50 space-y-4">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              name="evChargingAvailable"
+              disabled={loading}
+              checked={formData.evChargingAvailable}
+              onChange={handleChange}
+              className="accent-emerald-500 w-4 h-4"
+            />
+            <span className="text-sm font-bold text-emerald-450">⚡ Enable EV Charging Station Support</span>
+          </label>
+
+          {formData.evChargingAvailable && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 animate-fade-in">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">
+                  Number of EV Charging Slots
+                </label>
+                <input
+                  type="number"
+                  name="evChargingSlots"
+                  required
+                  disabled={loading}
+                  min="1"
+                  value={formData.evChargingSlots}
+                  onChange={handleChange}
+                  placeholder="e.g. 2"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">
+                  EV Charging Price Per Hour (₹)
+                </label>
+                <input
+                  type="number"
+                  name="evChargingPricePerHour"
+                  required
+                  disabled={loading}
+                  min="0"
+                  value={formData.evChargingPricePerHour}
+                  onChange={handleChange}
+                  placeholder="e.g. 60"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50 text-sm"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs font-semibold text-slate-400 mb-2">
+                  Connector Types Supported
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {evConnectorOptions.map((type) => (
+                    <label
+                      key={type}
+                      className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none transition-colors ${
+                        formData.evConnectorTypes.includes(type)
+                          ? 'border-emerald-500/50 bg-emerald-500/5 text-slate-200'
+                          : 'border-slate-700 hover:border-slate-600 text-slate-400 bg-slate-900/30'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        disabled={loading}
+                        checked={formData.evConnectorTypes.includes(type)}
+                        onChange={() => {
+                          setFormData((prev) => {
+                            const current = prev.evConnectorTypes;
+                            const updated = current.includes(type)
+                              ? current.filter((t) => t !== type)
+                              : [...current, type];
+                            return { ...prev, evConnectorTypes: updated };
+                          });
+                        }}
+                        className="accent-emerald-500"
+                      />
+                      <span className="text-xs font-medium">{type}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Address */}

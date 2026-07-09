@@ -58,7 +58,30 @@ export const createBooking = asyncHandler(async (req, res) => {
   const diffMs = end - start;
   const durationHours = Math.ceil(diffMs / (1000 * 60 * 60)); // Ceil up to next hour
 
-  const hourlyRateSnapshot = lotDoc.pricePerHour;
+  let hourlyRateSnapshot = lotDoc.pricePerHour;
+  let category = '';
+  if (['bike', 'scooter'].includes(vehicleDoc.type)) {
+    category = 'twoWheeler';
+  } else if (['car', 'ev'].includes(vehicleDoc.type)) {
+    category = 'fourWheeler';
+  }
+
+  if (
+    category &&
+    lotDoc.pricePerHourByVehicleCategory &&
+    typeof lotDoc.pricePerHourByVehicleCategory[category] === 'number' &&
+    lotDoc.pricePerHourByVehicleCategory[category] > 0
+  ) {
+    hourlyRateSnapshot = lotDoc.pricePerHourByVehicleCategory[category];
+  } else if (
+    lotDoc.pricePerHourByVehicleType &&
+    typeof lotDoc.pricePerHourByVehicleType === 'object' &&
+    vehicleDoc.type &&
+    typeof lotDoc.pricePerHourByVehicleType[vehicleDoc.type] === 'number' &&
+    lotDoc.pricePerHourByVehicleType[vehicleDoc.type] > 0
+  ) {
+    hourlyRateSnapshot = lotDoc.pricePerHourByVehicleType[vehicleDoc.type];
+  }
   const totalAmount = durationHours * hourlyRateSnapshot;
 
   // 8. Generate booking reference PIN-[8-char hex]
