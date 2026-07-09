@@ -9,6 +9,7 @@ import ParkingSlots from '../pages/ParkingSlots.jsx';
 import MyBookings from '../pages/MyBookings.jsx';
 import QRPass from '../pages/QRPass.jsx';
 import AdminDashboard from '../pages/AdminDashboard.jsx';
+import AdminQRVerify from '../pages/AdminQRVerify.jsx';
 import Vehicles from '../pages/Vehicles.jsx';
 import NotFound from '../pages/NotFound.jsx';
 
@@ -26,6 +27,7 @@ const AppRoutes = () => {
           <Route path="bookings/:bookingId/qr-pass" element={<QRPass />} />
           <Route path="vehicles" element={<Vehicles />} />
           <Route path="admin" element={<AdminDashboard />} />
+          <Route path="admin/qr-verify" element={<AdminQRVerify />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

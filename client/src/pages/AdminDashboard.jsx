@@ -1,5 +1,6 @@
 import React from 'react';
-import { LayoutDashboard, Car, Compass, Calendar, DollarSign } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { LayoutDashboard, Car, Compass, Calendar, DollarSign, QrCode } from 'lucide-react';
 
 const DUMMY_STATS = {
   totalParkingLots: 8,
@@ -90,14 +91,23 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-10 py-4">
       {/* Page Heading */}
-      <div>
-        <h2 className="text-3xl font-extrabold text-slate-100 flex items-center space-x-2">
-          <LayoutDashboard className="h-8 w-8 text-emerald-400" />
-          <span>Admin Dashboard</span>
-        </h2>
-        <p className="text-slate-400 mt-2">
-          Monitor system metrics, reservation trends, and slot occupancy statistics.
-        </p>
+      <div className="flex flex-wrap justify-between items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-extrabold text-slate-100 flex items-center space-x-2">
+            <LayoutDashboard className="h-8 w-8 text-emerald-400" />
+            <span>Admin Dashboard</span>
+          </h2>
+          <p className="text-slate-400 mt-2">
+            Monitor system metrics, reservation trends, and slot occupancy statistics.
+          </p>
+        </div>
+        <Link
+          to="/admin/qr-verify"
+          className="flex items-center space-x-2 bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold px-5 py-2.5 rounded-lg shadow-lg transition-colors text-sm"
+        >
+          <QrCode className="h-4 w-4" />
+          <span>Verify Booking QR</span>
+        </Link>
       </div>
 
       {/* 4 Stats Cards */}
