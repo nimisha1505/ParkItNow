@@ -1,12 +1,17 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import User from '../models/user.model.js';
 import ParkingLot from '../models/parkingLot.model.js';
 import ParkingSlot from '../models/parkingSlot.model.js';
 
-// Load environment variables
-dotenv.config();
+// Resolve __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables using absolute path
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const DB_GWALIOR_LOTS = [
   {
@@ -148,16 +153,27 @@ const DB_INDORE_LOTS = [
 
 const seedParkingData = async () => {
   const mongoUri = process.env.MONGODB_URI;
+  console.log(`MONGODB_URI exists: ${!!mongoUri}`);
+  console.log(`DB_NAME value: ${process.env.DB_NAME}`);
+
   if (!mongoUri) {
     console.error('Error: MONGODB_URI is not defined in the environment variables.');
     process.exit(1);
   }
 
   console.log('Connecting to MongoDB Atlas...');
-  await mongoose.connect(mongoUri);
+  await mongoose.connect(mongoUri, {
+    dbName: process.env.DB_NAME || "parkitnow"
+  });
   console.log('Connected successfully.');
 
   try {
+    const dbName = mongoose.connection.name || mongoose.connection.db.databaseName;
+    console.log(`connected database name: ${dbName}`);
+
+    const lotsBefore = await ParkingLot.countDocuments();
+    console.log(`parking lot count before seed: ${lotsBefore}`);
+
     // 1. Create or Find Demo Owner
     const ownerEmail = 'demo.owner@parkitnow.com';
     let ownerUser = await User.findOne({ email: ownerEmail });
@@ -175,31 +191,39 @@ const seedParkingData = async () => {
     }
 
     const allLotsToSeed = [...DB_GWALIOR_LOTS, ...DB_INDORE_LOTS];
+    let totalSlotsCreatedOrUpdated = 0;
 
     for (const lotSpec of allLotsToSeed) {
-      // 2. Check if Lot already exists
-      let lotDoc = await ParkingLot.findOne({ name: lotSpec.name, city: lotSpec.city });
-      if (!lotDoc) {
-        console.log(`Seeding parking lot: ${lotSpec.name} (${lotSpec.city})...`);
-        lotDoc = await ParkingLot.create({
-          ...lotSpec,
-          approvalStatus: 'approved',
-          isActive: true,
-          owner: ownerUser._id,
-          createdBy: ownerUser._id,
-          totalSlots: 0,
-          availableSlots: 0,
-        });
-      } else {
-        console.log(`Skipping existing parking lot: ${lotSpec.name} (${lotSpec.city})`);
-      }
+      const lotQuery = {
+        name: lotSpec.name,
+        city: lotSpec.city,
+      };
 
-      // 3. Seed slots if lot has no slots configured
+      const updateData = {
+        ...lotSpec,
+        city: lotSpec.city,
+        area: lotSpec.area,
+        approvalStatus: 'approved',
+        isActive: true,
+        owner: ownerUser._id,
+        createdBy: ownerUser._id,
+      };
+
+      // 2. Use findOneAndUpdate with upsert: true based on name and city
+      const lotDoc = await ParkingLot.findOneAndUpdate(
+        lotQuery,
+        { $set: updateData },
+        { upsert: true, new: true, runValidators: true }
+      );
+
+      console.log(`Processed parking lot: ${lotDoc.name} (${lotDoc.city}) - approvalStatus forced to approved`);
+
+      // 3. Link slots
       const existingSlotsCount = await ParkingSlot.countDocuments({ parkingLot: lotDoc._id });
+      let lotTotalSlots = existingSlotsCount;
+      let lotAvailableSlots = 0;
+
       if (existingSlotsCount === 0) {
-        console.log(`Seeding slots for parking lot: ${lotDoc.name}...`);
-        
-        // Generate 10 slots (A1-A3, B1-B3, C1-C2, D1-D2)
         const slotsToCreate = [
           { slotNumber: 'A1', floor: 'Ground', section: 'Sec A', status: 'available' },
           { slotNumber: 'A2', floor: 'Ground', section: 'Sec A', status: 'occupied' },
@@ -226,20 +250,39 @@ const seedParkingData = async () => {
             })
           )
         );
-
-        // Calculate count metrics
-        const total = createdSlots.length;
-        const available = createdSlots.filter((s) => s.status === 'available').length;
-
-        lotDoc.totalSlots = total;
-        lotDoc.availableSlots = available;
-        await lotDoc.save();
-        console.log(`Seeded ${total} slots (${available} available) successfully for ${lotDoc.name}.`);
+        lotTotalSlots = createdSlots.length;
+        lotAvailableSlots = createdSlots.filter((s) => s.status === 'available').length;
+        totalSlotsCreatedOrUpdated += createdSlots.length;
       } else {
-        console.log(`Slots already configured for: ${lotDoc.name} (Count: ${existingSlotsCount})`);
+        const allSlots = await ParkingSlot.find({ parkingLot: lotDoc._id });
+        lotTotalSlots = allSlots.length;
+        lotAvailableSlots = allSlots.filter((s) => s.status === 'available').length;
+        totalSlotsCreatedOrUpdated += allSlots.length;
       }
+
+      lotDoc.totalSlots = lotTotalSlots;
+      lotDoc.availableSlots = lotAvailableSlots;
+      await lotDoc.save();
     }
 
+    const lotsAfter = await ParkingLot.countDocuments();
+    console.log(`parking lot count after seed: ${lotsAfter}`);
+
+    const gwaliorApprovedCount = await ParkingLot.countDocuments({
+      city: 'gwalior',
+      approvalStatus: 'approved',
+      isActive: true,
+    });
+    console.log(`approved active Gwalior lot count after seed: ${gwaliorApprovedCount}`);
+
+    const indoreApprovedCount = await ParkingLot.countDocuments({
+      city: 'indore',
+      approvalStatus: 'approved',
+      isActive: true,
+    });
+    console.log(`approved active Indore lot count after seed: ${indoreApprovedCount}`);
+
+    console.log(`number of slots created or already existing: ${totalSlotsCreatedOrUpdated}`);
     console.log('Seeding process completed successfully!');
   } catch (err) {
     console.error('Seeding process encountered an error:', err);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Compass, MapPin, ShieldCheck, Ticket } from 'lucide-react';
+import { Compass, MapPin, ShieldCheck, Ticket, Navigation } from 'lucide-react';
 import axiosClient from '../api/axiosClient.js';
 
 const DUMMY_LOT = {
@@ -103,6 +103,18 @@ const ParkingSlots = () => {
     }));
   };
 
+  const handleGetDirections = (targetLot) => {
+    if (!targetLot) return;
+    let url = '';
+    if (targetLot.coordinates && targetLot.coordinates.lat && targetLot.coordinates.lng) {
+      url = `https://www.google.com/maps/dir/?api=1&destination=${targetLot.coordinates.lat},${targetLot.coordinates.lng}`;
+    } else {
+      const query = encodeURIComponent(`${targetLot.name}, ${targetLot.area || ''}, ${targetLot.city}`);
+      url = `https://www.google.com/maps/dir/?api=1&destination=${query}`;
+    }
+    window.open(url, '_blank');
+  };
+
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
     if (!selectedSlot) {
@@ -189,6 +201,15 @@ const ParkingSlots = () => {
             <MapPin className="h-4 w-4 text-slate-500 mt-0.5" />
             <span>{currentLot.area || 'N/A'}, {currentLot.city || 'N/A'}</span>
           </p>
+          <div className="pt-2">
+            <button
+              onClick={() => handleGetDirections(currentLot)}
+              className="bg-slate-900 hover:bg-slate-750 border border-slate-700 text-slate-350 font-bold px-3.5 py-1.5 rounded-lg transition-colors text-xs flex items-center gap-1.5"
+            >
+              <Navigation className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Get Directions</span>
+            </button>
+          </div>
         </div>
         <div className="text-right">
           <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider block">Price Rate</span>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Compass, MapPin } from 'lucide-react';
+import { Search, Compass, MapPin, Navigation } from 'lucide-react';
 import axiosClient from '../api/axiosClient.js';
 
 const DUMMY_LOTS = [
@@ -70,7 +70,20 @@ const ParkingLots = () => {
       if (searchFilters.maxPrice) params.maxPrice = searchFilters.maxPrice;
 
       const response = await axiosClient.get('/parking-lots', { params });
-      setParkingLots(response.data.data || []);
+      console.log("Parking lots API response:", response.data);
+
+      const responseData = response.data?.data;
+      let lotsList = [];
+      if (responseData) {
+        if (Array.isArray(responseData)) {
+          lotsList = responseData;
+        } else if (Array.isArray(responseData.parkingLots)) {
+          lotsList = responseData.parkingLots;
+        } else if (Array.isArray(responseData.lots)) {
+          lotsList = responseData.lots;
+        }
+      }
+      setParkingLots(lotsList);
     } catch (err) {
       console.error('Fetch parking lots error:', err);
       setError(err.response?.data?.message || err.message || 'Failed to fetch parking lots.');
@@ -97,6 +110,17 @@ const ParkingLots = () => {
     fetchLots(filters);
   };
 
+  const handleGetDirections = (lot) => {
+    let url = '';
+    if (lot.coordinates && lot.coordinates.lat && lot.coordinates.lng) {
+      url = `https://www.google.com/maps/dir/?api=1&destination=${lot.coordinates.lat},${lot.coordinates.lng}`;
+    } else {
+      const query = encodeURIComponent(`${lot.name}, ${lot.area || ''}, ${lot.city}`);
+      url = `https://www.google.com/maps/dir/?api=1&destination=${query}`;
+    }
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="space-y-8 py-4">
       {/* Page Heading */}
@@ -117,14 +141,16 @@ const ParkingLots = () => {
             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
               City
             </label>
-            <input
-              type="text"
+            <select
               name="city"
               value={filters.city}
               onChange={handleChange}
-              placeholder="e.g. Noida"
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
-            />
+            >
+              <option value="">Any City</option>
+              <option value="Gwalior">Gwalior</option>
+              <option value="Indore">Indore</option>
+            </select>
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
@@ -195,7 +221,7 @@ const ParkingLots = () => {
         </div>
       ) : parkingLots.length === 0 ? (
         <div className="bg-slate-800 border border-slate-700 p-8 rounded-xl text-center text-slate-400">
-          No active, approved parking lots found matching your search.
+          No approved parking lots found for this city.
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-6">
@@ -254,12 +280,21 @@ const ParkingLots = () => {
                   </div>
                 )}
 
-                <button
-                  onClick={() => navigate(`/parking-lots/${lotId}/slots`)}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-slate-900 font-bold py-2 rounded-lg transition-colors text-center"
-                >
-                  View Slots
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <button
+                    onClick={() => handleGetDirections(lot)}
+                    className="flex-1 bg-slate-900 hover:bg-slate-750 border border-slate-700 text-slate-300 font-bold py-2 rounded-lg transition-colors text-center text-sm flex items-center justify-center gap-1.5"
+                  >
+                    <Navigation className="w-3.5 h-3.5 text-emerald-450" />
+                    <span>Get Directions</span>
+                  </button>
+                  <button
+                    onClick={() => navigate(`/parking-lots/${lotId}/slots`)}
+                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-slate-900 font-bold py-2 rounded-lg transition-colors text-center text-sm"
+                  >
+                    View Slots
+                  </button>
+                </div>
               </div>
             );
           })}

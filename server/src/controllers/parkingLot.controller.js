@@ -46,10 +46,10 @@ export const getParkingLots = asyncHandler(async (req, res) => {
 
   const query = {};
   if (city) {
-    query.city = city.toLowerCase();
+    query.city = { $regex: `^${city.trim()}$`, $options: 'i' };
   }
   if (area) {
-    query.area = area.toLowerCase();
+    query.area = { $regex: `^${area.trim()}$`, $options: 'i' };
   }
   if (vehicleType) {
     query.supportedVehicleTypes = vehicleType;
@@ -74,6 +74,10 @@ export const getParkingLots = asyncHandler(async (req, res) => {
   }
 
   const parkingLots = await ParkingLot.find(query);
+
+  console.log("req.query:", req.query);
+  console.log("final MongoDB filter:", query);
+  console.log("result count:", parkingLots.length);
 
   return res
     .status(200)
