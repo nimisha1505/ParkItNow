@@ -1,40 +1,93 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Compass, MapPin, ShieldCheck, Ticket } from 'lucide-react';
+import axiosClient from '../api/axiosClient.js';
 
 const DUMMY_LOT = {
-  id: '1',
   name: 'Downtown SafePark Hub',
   city: 'New York',
   area: 'Manhattan',
   pricePerHour: 12,
 };
 
-const DUMMY_VEHICLES = [
-  { id: 'v1', brand: 'Tesla', model: 'Model 3', reg: 'NY-99-C-1234' },
-  { id: 'v2', brand: 'Yamaha', model: 'YZF-R3', reg: 'CA-55-B-5678' },
-  { id: 'v3', brand: 'Nissan', model: 'Leaf', reg: 'WA-12-E-9012' },
-];
-
 const DUMMY_SLOTS = [
-  { id: 's1', name: 'A1', status: 'available' },
-  { id: 's2', name: 'A2', status: 'occupied' },
-  { id: 's3', name: 'A3', status: 'reserved' },
-  { id: 's4', name: 'B1', status: 'available' },
-  { id: 's5', name: 'B2', status: 'maintenance' },
-  { id: 's6', name: 'B3', status: 'available' },
-  { id: 's7', name: 'C1', status: 'available' },
-  { id: 's8', name: 'C2', status: 'occupied' },
+  { _id: 's1', slotNumber: 'A1', status: 'available' },
+  { _id: 's2', slotNumber: 'A2', status: 'occupied' },
+  { _id: 's3', slotNumber: 'A3', status: 'reserved' },
+  { _id: 's4', slotNumber: 'B1', status: 'available' },
+  { _id: 's5', slotNumber: 'B2', status: 'maintenance' },
+  { _id: 's6', slotNumber: 'B3', status: 'available' },
 ];
 
 const ParkingSlots = () => {
   const { lotId } = useParams();
+  const navigate = useNavigate();
+
+  const [lot, setLot] = useState(null);
+  const [slots, setSlots] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
+
   const [formData, setFormData] = useState({
-    vehicleId: DUMMY_VEHICLES[0]?.id || '',
+    vehicleId: '',
     startTime: '',
     endTime: '',
   });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // 1. Fetch Parking Lot Details
+      let fetchedLot = null;
+      try {
+        const lotRes = await axiosClient.get(`/parking-lots/${lotId}`);
+        fetchedLot = lotRes.data.data;
+        setLot(fetchedLot);
+      } catch (err) {
+        console.warn('Failed to fetch lot details from API, using fallback.');
+      }
+
+      // 2. Fetch slots from backend
+      try {
+        const slotsRes = await axiosClient.get('/parking-slots', {
+          params: { parkingLotId: lotId },
+        });
+        setSlots(slotsRes.data.data || []);
+      } catch (err) {
+        console.warn('Failed to fetch slots from API, using fallback.');
+        setSlots(DUMMY_SLOTS);
+      }
+
+      // 3. Fetch user's vehicles
+      try {
+        const vehiclesRes = await axiosClient.get('/vehicles');
+        const userVehicles = vehiclesRes.data.data || [];
+        setVehicles(userVehicles);
+        if (userVehicles.length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            vehicleId: userVehicles[0]._id || userVehicles[0].id || '',
+          }));
+        }
+      } catch (err) {
+        console.warn('Failed to fetch vehicles from API.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('An unexpected error occurred while loading slot choices.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [lotId]);
 
   const handleSlotSelect = (slot) => {
     if (slot.status === 'available') {
@@ -50,25 +103,40 @@ const ParkingSlots = () => {
     }));
   };
 
-  const handleBookingSubmit = (e) => {
+  const handleBookingSubmit = async (e) => {
     e.preventDefault();
     if (!selectedSlot) {
       alert('Please select a parking slot');
       return;
     }
-    const bookingDetails = {
-      lotId,
-      lotName: DUMMY_LOT.name,
-      pricePerHour: DUMMY_LOT.pricePerHour,
-      selectedSlot: selectedSlot.name,
-      ...formData,
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    const slotId = selectedSlot._id || selectedSlot.id;
+    const payload = {
+      parkingLot: lotId,
+      parkingSlot: slotId,
+      vehicle: formData.vehicleId,
+      startTime: formData.startTime,
+      endTime: formData.endTime,
     };
-    console.log('Confirming booking details:', bookingDetails);
-    alert(`Booking confirmed for slot ${selectedSlot.name}!`);
+
+    try {
+      await axiosClient.post('/bookings', payload);
+      setSuccess(true);
+      alert(`Booking confirmed for slot ${selectedSlot.slotNumber || selectedSlot.name}!`);
+      navigate('/my-bookings');
+    } catch (err) {
+      console.error('Booking confirmation failed:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to complete booking.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getSlotColor = (slot) => {
-    const isSelected = selectedSlot?.id === slot.id;
+    const isSelected = selectedSlot?._id === slot._id || selectedSlot?.id === slot.id;
     if (isSelected) {
       return 'bg-emerald-500 text-slate-900 border-emerald-400 font-bold scale-105';
     }
@@ -85,6 +153,8 @@ const ParkingSlots = () => {
         return 'bg-slate-800 text-slate-400 border-slate-700';
     }
   };
+
+  const currentLot = lot || DUMMY_LOT;
 
   return (
     <div className="space-y-10 py-4">
@@ -104,19 +174,25 @@ const ParkingSlots = () => {
         </div>
       </div>
 
-      {/* Dummy parking lot info */}
-      <div className="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-lg flex flex-wrap justify-between items-center gap-4">
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/25 text-red-400 p-4 rounded-xl text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* Selected Lot details header */}
+      <div className="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-lg flex flex-wrap justify-between items-center gap-4 animate-fade-in">
         <div className="space-y-1">
           <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider block">Selected Lot</span>
-          <h3 className="text-xl font-bold text-slate-100">{DUMMY_LOT.name}</h3>
+          <h3 className="text-xl font-bold text-slate-100">{currentLot.name}</h3>
           <p className="text-sm text-slate-400 flex items-center space-x-1">
-            <MapPin className="h-4 w-4 text-slate-500" />
-            <span>{DUMMY_LOT.area}, {DUMMY_LOT.city}</span>
+            <MapPin className="h-4 w-4 text-slate-500 mt-0.5" />
+            <span>{currentLot.area || 'N/A'}, {currentLot.city || 'N/A'}</span>
           </p>
         </div>
         <div className="text-right">
           <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider block">Price Rate</span>
-          <span className="text-2xl font-extrabold text-blue-400">${DUMMY_LOT.pricePerHour}</span>
+          <span className="text-2xl font-extrabold text-blue-400">₹{currentLot.pricePerHour}</span>
           <span className="text-xs text-slate-400"> / hr</span>
         </div>
       </div>
@@ -136,18 +212,32 @@ const ParkingSlots = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-4 gap-4">
-            {DUMMY_SLOTS.map((slot) => (
-              <button
-                key={slot.id}
-                onClick={() => handleSlotSelect(slot)}
-                disabled={slot.status !== 'available'}
-                className={`h-16 rounded-xl flex items-center justify-center text-lg font-semibold border transition-all ${getSlotColor(slot)}`}
-              >
-                {slot.name}
-              </button>
-            ))}
-          </div>
+          {loading && slots.length === 0 ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+            </div>
+          ) : slots.length === 0 ? (
+            <div className="text-center text-slate-500 py-8">
+              No slots available in this parking lot.
+            </div>
+          ) : (
+            <div className="grid grid-cols-4 gap-4">
+              {slots.map((slot) => {
+                const slotId = slot._id || slot.id;
+                return (
+                  <button
+                    key={slotId}
+                    type="button"
+                    onClick={() => handleSlotSelect(slot)}
+                    disabled={slot.status !== 'available'}
+                    className={`h-16 rounded-xl flex items-center justify-center text-lg font-semibold border transition-all ${getSlotColor(slot)}`}
+                  >
+                    {slot.slotNumber || slot.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Booking Form Card */}
@@ -162,15 +252,21 @@ const ParkingSlots = () => {
               <label className="block text-slate-300 font-medium mb-1">Select Vehicle</label>
               <select
                 name="vehicleId"
+                required
+                disabled={loading}
                 value={formData.vehicleId}
                 onChange={handleInputChange}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 disabled:opacity-50"
               >
-                {DUMMY_VEHICLES.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.brand} {v.model} ({v.reg})
-                  </option>
-                ))}
+                {vehicles.length === 0 ? (
+                  <option value="">No vehicles found. Register one first!</option>
+                ) : (
+                  vehicles.map((v) => (
+                    <option key={v._id} value={v._id}>
+                      {v.brand} {v.model} ({v.registrationNumber})
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -180,9 +276,10 @@ const ParkingSlots = () => {
                 type="datetime-local"
                 name="startTime"
                 required
+                disabled={loading}
                 value={formData.startTime}
                 onChange={handleInputChange}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 disabled:opacity-50"
               />
             </div>
 
@@ -192,9 +289,10 @@ const ParkingSlots = () => {
                 type="datetime-local"
                 name="endTime"
                 required
+                disabled={loading}
                 value={formData.endTime}
                 onChange={handleInputChange}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 disabled:opacity-50"
               />
             </div>
 
@@ -204,7 +302,7 @@ const ParkingSlots = () => {
                 <span className="text-slate-500 text-xs font-semibold uppercase">Selected Spot</span>
                 <p className="text-lg font-bold text-slate-200 flex items-center space-x-1.5">
                   <ShieldCheck className="h-5 w-5 text-emerald-400" />
-                  <span>Slot {selectedSlot.name}</span>
+                  <span>Slot {selectedSlot.slotNumber || selectedSlot.name}</span>
                 </p>
               </div>
             ) : (
@@ -215,14 +313,14 @@ const ParkingSlots = () => {
 
             <button
               type="submit"
-              disabled={!selectedSlot}
+              disabled={loading || !selectedSlot || vehicles.length === 0}
               className={`w-full font-bold py-2.5 rounded-lg transition-colors text-center ${
-                selectedSlot
-                  ? 'bg-blue-500 hover:bg-blue-600 text-slate-900 shadow-lg'
+                selectedSlot && vehicles.length > 0 && !loading
+                  ? 'bg-blue-500 hover:bg-blue-600 text-slate-900 shadow-lg cursor-pointer'
                   : 'bg-slate-750 text-slate-500 cursor-not-allowed border border-slate-700/50'
               }`}
             >
-              Confirm Booking
+              {loading ? 'Confirming...' : 'Confirm Booking'}
             </button>
           </form>
         </div>
