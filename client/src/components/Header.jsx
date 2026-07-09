@@ -66,6 +66,9 @@ const Header = () => {
               {/* If owner or superAdmin */}
               {(user?.role === 'owner' || user?.role === 'superAdmin') && (
                 <>
+                  <Link to="/list-parking" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                    List Your Parking
+                  </Link>
                   <Link to="/admin" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
                     Admin
                   </Link>

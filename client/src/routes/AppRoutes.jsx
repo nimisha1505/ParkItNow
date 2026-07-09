@@ -12,6 +12,7 @@ import AdminDashboard from '../pages/AdminDashboard.jsx';
 import AdminQRVerify from '../pages/AdminQRVerify.jsx';
 import Vehicles from '../pages/Vehicles.jsx';
 import Profile from '../pages/Profile.jsx';
+import ListParking from '../pages/ListParking.jsx';
 import NotFound from '../pages/NotFound.jsx';
 
 const AppRoutes = () => {
@@ -27,6 +28,7 @@ const AppRoutes = () => {
         <Route path="bookings/:bookingId/qr-pass" element={<QRPass />} />
         <Route path="vehicles" element={<Vehicles />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="list-parking" element={<ListParking />} />
         <Route path="admin" element={<AdminDashboard />} />
         <Route path="admin/qr-verify" element={<AdminQRVerify />} />
         <Route path="*" element={<NotFound />} />

@@ -47,6 +47,8 @@ export const getOverview = asyncHandler(async (req, res) => {
     totalBookings,
     confirmedBookings,
     todayBookings,
+    completedBookings,
+    paidBookings,
     completedBookingsSum,
   ] = await Promise.all([
     ParkingLot.countDocuments(lotQuery),
@@ -57,6 +59,8 @@ export const getOverview = asyncHandler(async (req, res) => {
     Booking.countDocuments(bookingQuery),
     Booking.countDocuments({ ...bookingQuery, status: 'confirmed' }),
     Booking.countDocuments(todayBookingQuery),
+    Booking.countDocuments({ ...bookingQuery, status: 'completed' }),
+    Booking.countDocuments({ ...bookingQuery, paymentStatus: 'paid' }),
     Booking.aggregate([
       { $match: completedBookingMatch },
       {
@@ -86,6 +90,8 @@ export const getOverview = asyncHandler(async (req, res) => {
         totalBookings,
         confirmedBookings,
         todayBookings,
+        completedBookings,
+        paidBookings,
         totalRevenue,
         platformFee,
         ownerEarning,
@@ -134,7 +140,13 @@ export const getRevenue = asyncHandler(async (req, res) => {
     createdAt: { $gte: startDate },
   };
 
-  const [totalRevenueResult, chartData] = await Promise.all([
+  const [
+    totalRevenueResult,
+    totalBookings,
+    completedBookings,
+    paidBookings,
+    chartData,
+  ] = await Promise.all([
     Booking.aggregate([
       { $match: totalRevenueMatch },
       {
@@ -146,6 +158,9 @@ export const getRevenue = asyncHandler(async (req, res) => {
         },
       },
     ]),
+    Booking.countDocuments(bookingQuery),
+    Booking.countDocuments({ ...bookingQuery, status: 'completed' }),
+    Booking.countDocuments({ ...bookingQuery, paymentStatus: 'paid' }),
     Booking.aggregate([
       { $match: chartMatch },
       {
@@ -169,6 +184,9 @@ export const getRevenue = asyncHandler(async (req, res) => {
     totalRevenue,
     platformFee,
     ownerEarning,
+    totalBookings,
+    completedBookings,
+    paidBookings,
     period: period || 'month',
     chartData: chartData.map((item) => ({
       label: item._id,
