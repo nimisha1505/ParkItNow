@@ -46,6 +46,11 @@ const Register = () => {
     setError(null);
     try {
       await registerUser(formData.name, formData.email, formData.password, formData.role);
+      
+      if (formData.role === 'owner') {
+        alert('Registration successful! You can now login and submit your parking space for approval.');
+      }
+      
       navigate('/login');
     } catch (err) {
       console.error('Register error:', err);
@@ -95,7 +100,7 @@ const Register = () => {
                     : 'border-slate-700 bg-slate-900/50 text-slate-400 hover:border-slate-600'
                 }`}
               >
-                <div className="text-sm font-bold">List Space</div>
+                <div className="text-sm font-bold">List My Parking Space</div>
                 <div className="text-[10px] text-slate-500 mt-0.5">Parking Owner</div>
               </button>
             </div>

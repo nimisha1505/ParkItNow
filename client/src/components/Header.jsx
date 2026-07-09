@@ -37,7 +37,7 @@ const Header = () => {
               <Link to="/parking-lots" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
                 Parking Lots
               </Link>
-              <Link to="/register?role=owner" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+              <Link to="/register" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
                 List Your Parking
               </Link>
               <Link to="/login" className="text-sm font-medium text-slate-300 hover:text-blue-400 transition-colors">
@@ -63,18 +63,31 @@ const Header = () => {
                 Profile
               </Link>
 
-              {/* If owner or superAdmin */}
+              {/* List Your Parking visibility for authenticated users */}
+              {(user?.role === 'owner' || user?.role === 'superAdmin') ? (
+                <Link to="/list-parking" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                  List Your Parking
+                </Link>
+              ) : (
+                <Link to="/register" className="text-sm font-medium text-slate-650 cursor-not-allowed select-none transition-colors" title="List Your Parking (Unavailable for normal users)">
+                  List Your Parking (Unavailable)
+                </Link>
+              )}
+
+              {/* If owner or superAdmin, also show admin dashboard and verification links */}
               {(user?.role === 'owner' || user?.role === 'superAdmin') && (
                 <>
-                  <Link to="/list-parking" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-                    List Your Parking
-                  </Link>
                   <Link to="/admin" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
                     Admin
                   </Link>
                   <Link to="/admin/qr-verify" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
                     QR Verify
                   </Link>
+                  {user?.role === 'superAdmin' && (
+                    <Link to="/admin/parking-approvals" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                      Approvals
+                    </Link>
+                  )}
                 </>
               )}
 

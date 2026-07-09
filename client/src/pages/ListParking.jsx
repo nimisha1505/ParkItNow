@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Info, MapPin, Shield, DollarSign, Car } from 'lucide-react';
+import axiosClient from '../api/axiosClient.js';
 
 const ListParking = () => {
   const [formData, setFormData] = useState({
@@ -15,7 +16,9 @@ const ListParking = () => {
     amenities: [],
   });
 
-  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
 
   const vehicleTypesOptions = [
     { label: 'Car', value: 'car' },
@@ -54,23 +57,56 @@ const ListParking = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Submitting Parking Space Listing:', formData);
-    setSubmitted(true);
-    // Reset form after successful mock submit
-    setFormData({
-      name: '',
-      address: '',
-      city: '',
-      area: '',
-      landmark: '',
-      lat: '',
-      lng: '',
-      pricePerHour: '',
-      supportedVehicleTypes: [],
-      amenities: [],
-    });
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    const payload = {
+      name: formData.name,
+      address: formData.address,
+      city: formData.city,
+      area: formData.area,
+      landmark: formData.landmark,
+      coordinates: {
+        lat: Number(formData.lat),
+        lng: Number(formData.lng),
+      },
+      pricePerHour: Number(formData.pricePerHour),
+      supportedVehicleTypes: formData.supportedVehicleTypes,
+      amenities: formData.amenities,
+      totalSlots: 10,
+      availableSlots: 10,
+    };
+
+    try {
+      await axiosClient.post('/parking-lots', payload);
+      setSuccess(true);
+      setFormData({
+        name: '',
+        address: '',
+        city: '',
+        area: '',
+        landmark: '',
+        lat: '',
+        lng: '',
+        pricePerHour: '',
+        supportedVehicleTypes: [],
+        amenities: [],
+      });
+    } catch (err) {
+      console.error('List parking error:', err);
+      const status = err.response?.status;
+      if (status === 401 || status === 403) {
+        setError('Please login as a parking owner to list your parking space.');
+      } else {
+        const errMsg = err.response?.data?.message || err.message || 'Failed to list parking space';
+        setError(errMsg);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -84,7 +120,7 @@ const ListParking = () => {
         </p>
       </div>
 
-      {submitted && (
+      {success && (
         <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-4 rounded-xl mb-6 flex items-start gap-3">
           <Shield className="w-5 h-5 mt-0.5 flex-shrink-0" />
           <div>
@@ -92,6 +128,15 @@ const ListParking = () => {
             <p className="text-sm mt-1 text-slate-300">
               Your parking space has been submitted for approval.
             </p>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/25 text-red-400 p-4 rounded-xl mb-6 flex items-start gap-3">
+          <Shield className="w-5 h-5 mt-0.5 flex-shrink-0" />
+          <div className="text-sm">
+            {error}
           </div>
         </div>
       )}
@@ -119,10 +164,11 @@ const ListParking = () => {
               type="text"
               name="name"
               required
+              disabled={loading}
               value={formData.name}
               onChange={handleChange}
               placeholder="e.g. Metro Square Secure Parking"
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50"
             />
           </div>
 
@@ -138,11 +184,12 @@ const ListParking = () => {
                 type="number"
                 name="pricePerHour"
                 required
+                disabled={loading}
                 min="0"
                 value={formData.pricePerHour}
                 onChange={handleChange}
                 placeholder="40"
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50"
               />
             </div>
           </div>
@@ -157,10 +204,11 @@ const ListParking = () => {
             type="text"
             name="address"
             required
+            disabled={loading}
             value={formData.address}
             onChange={handleChange}
             placeholder="e.g. Plot No 42, Sector 18"
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
+            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50"
           />
         </div>
 
@@ -174,10 +222,11 @@ const ListParking = () => {
               type="text"
               name="city"
               required
+              disabled={loading}
               value={formData.city}
               onChange={handleChange}
               placeholder="Noida"
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50"
             />
           </div>
 
@@ -189,10 +238,11 @@ const ListParking = () => {
               type="text"
               name="area"
               required
+              disabled={loading}
               value={formData.area}
               onChange={handleChange}
               placeholder="Sector 18"
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50"
             />
           </div>
 
@@ -203,10 +253,11 @@ const ListParking = () => {
             <input
               type="text"
               name="landmark"
+              disabled={loading}
               value={formData.landmark}
               onChange={handleChange}
               placeholder="Near Metro Station"
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50"
             />
           </div>
         </div>
@@ -227,10 +278,11 @@ const ListParking = () => {
               step="any"
               name="lat"
               required
+              disabled={loading}
               value={formData.lat}
               onChange={handleChange}
               placeholder="e.g. 28.5708"
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50"
             />
           </div>
 
@@ -243,10 +295,11 @@ const ListParking = () => {
               step="any"
               name="lng"
               required
+              disabled={loading}
               value={formData.lng}
               onChange={handleChange}
               placeholder="e.g. 77.3261"
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50"
             />
           </div>
         </div>
@@ -268,6 +321,7 @@ const ListParking = () => {
               >
                 <input
                   type="checkbox"
+                  disabled={loading}
                   checked={formData.supportedVehicleTypes.includes(type.value)}
                   onChange={() => handleCheckboxChange('supportedVehicleTypes', type.value)}
                   className="accent-emerald-500"
@@ -295,6 +349,7 @@ const ListParking = () => {
               >
                 <input
                   type="checkbox"
+                  disabled={loading}
                   checked={formData.amenities.includes(amenity)}
                   onChange={() => handleCheckboxChange('amenities', amenity)}
                   className="accent-emerald-500"
@@ -308,9 +363,12 @@ const ListParking = () => {
         {/* Submit */}
         <button
           type="submit"
-          className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold py-3 rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2 text-base"
+          disabled={loading}
+          className={`w-full bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold py-3 rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2 text-base ${
+            loading ? 'opacity-65 cursor-not-allowed' : ''
+          }`}
         >
-          <Shield className="w-5 h-5" /> Submit for Approval
+          <Shield className="w-5 h-5" /> {loading ? 'Submitting...' : 'Submit for Approval'}
         </button>
       </form>
     </div>

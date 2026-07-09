@@ -13,6 +13,7 @@ import AdminQRVerify from '../pages/AdminQRVerify.jsx';
 import Vehicles from '../pages/Vehicles.jsx';
 import Profile from '../pages/Profile.jsx';
 import ListParking from '../pages/ListParking.jsx';
+import ParkingApprovals from '../pages/ParkingApprovals.jsx';
 import NotFound from '../pages/NotFound.jsx';
 
 const AppRoutes = () => {
@@ -31,6 +32,7 @@ const AppRoutes = () => {
         <Route path="list-parking" element={<ListParking />} />
         <Route path="admin" element={<AdminDashboard />} />
         <Route path="admin/qr-verify" element={<AdminQRVerify />} />
+        <Route path="admin/parking-approvals" element={<ParkingApprovals />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

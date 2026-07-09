@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Car, Compass, Calendar, DollarSign, QrCode } from 'lucide-react';
+import { LayoutDashboard, Car, Compass, Calendar, DollarSign, QrCode, Shield } from 'lucide-react';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const DUMMY_STATS = {
   totalParkingLots: 8,
@@ -59,6 +60,8 @@ const DUMMY_OCCUPANCY = [
 ];
 
 const AdminDashboard = () => {
+  const { user } = useAuth();
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'confirmed':
@@ -101,13 +104,24 @@ const AdminDashboard = () => {
             Monitor system metrics, reservation trends, and slot occupancy statistics.
           </p>
         </div>
-        <Link
-          to="/admin/qr-verify"
-          className="flex items-center space-x-2 bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold px-5 py-2.5 rounded-lg shadow-lg transition-colors text-sm"
-        >
-          <QrCode className="h-4 w-4" />
-          <span>Verify Booking QR</span>
-        </Link>
+        <div className="flex gap-3 items-center flex-wrap">
+          {user?.role === 'superAdmin' && (
+            <Link
+              to="/admin/parking-approvals"
+              className="flex items-center space-x-2 bg-slate-700 hover:bg-slate-650 text-slate-100 font-semibold px-5 py-2.5 rounded-lg shadow-lg transition-colors text-sm border border-slate-600"
+            >
+              <Shield className="h-4 w-4 text-emerald-400" />
+              <span>Parking Approvals</span>
+            </Link>
+          )}
+          <Link
+            to="/admin/qr-verify"
+            className="flex items-center space-x-2 bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold px-5 py-2.5 rounded-lg shadow-lg transition-colors text-sm"
+          >
+            <QrCode className="h-4 w-4" />
+            <span>Verify Booking QR</span>
+          </Link>
+        </div>
       </div>
 
       {/* 4 Stats Cards */}
