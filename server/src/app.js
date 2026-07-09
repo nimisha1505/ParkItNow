@@ -22,9 +22,15 @@ const app = express();
 
 app.use(helmet());
 
+const allowedOrigins = [
+  process.env.CLIENT_URL ? process.env.CLIENT_URL.trim() : null,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173'
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || '*',
+    origin: allowedOrigins,
     credentials: true,
   })
 );

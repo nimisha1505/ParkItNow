@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { loginUser } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -15,9 +20,20 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login form submitted:', formData);
+    setLoading(true);
+    setError(null);
+    try {
+      await loginUser(formData.email, formData.password);
+      navigate('/parking-lots');
+    } catch (err) {
+      console.error('Login error:', err);
+      const errMsg = err.response?.data?.message || err.message || 'Login failed';
+      setError(errMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -26,6 +42,11 @@ const Login = () => {
         <h2 className="text-3xl font-bold mb-6 text-center text-slate-100">
           Sign In
         </h2>
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm mb-4">
+            {error}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">
@@ -57,9 +78,12 @@ const Login = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-500 hover:bg-blue-600 text-slate-900 font-bold py-2.5 rounded-lg transition-colors shadow-lg"
+            disabled={loading}
+            className={`w-full bg-blue-500 hover:bg-blue-600 text-slate-900 font-bold py-2.5 rounded-lg transition-colors shadow-lg flex items-center justify-center ${
+              loading ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
           >
-            Sign In
+            {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
         <p className="mt-6 text-sm text-center text-slate-400">

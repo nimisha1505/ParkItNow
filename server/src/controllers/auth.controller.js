@@ -32,7 +32,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     name,
     email,
     password,
-    role: role || 'user',
+    role: role === 'owner' ? 'owner' : 'user',
   });
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);

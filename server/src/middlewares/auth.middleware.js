@@ -30,3 +30,24 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
     throw new ApiError(401, error?.message || 'Invalid access token');
   }
 });
+
+export const isOwner = (req, res, next) => {
+  if (!req.user || req.user.role !== 'owner') {
+    throw new ApiError(403, 'Forbidden: Owner access required');
+  }
+  next();
+};
+
+export const isSuperAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== 'superAdmin') {
+    throw new ApiError(403, 'Forbidden: SuperAdmin access required');
+  }
+  next();
+};
+
+export const isOwnerOrSuperAdmin = (req, res, next) => {
+  if (!req.user || (req.user.role !== 'owner' && req.user.role !== 'superAdmin')) {
+    throw new ApiError(403, 'Forbidden: Owner or SuperAdmin access required');
+  }
+  next();
+};

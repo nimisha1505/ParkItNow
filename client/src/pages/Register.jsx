@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const Register = () => {
+  const navigate = useNavigate();
+  const { registerUser } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -17,13 +22,24 @@ const Register = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      setError("Passwords do not match");
       return;
     }
-    console.log('Register form submitted:', formData);
+    setLoading(true);
+    setError(null);
+    try {
+      await registerUser(formData.name, formData.email, formData.password);
+      navigate('/login');
+    } catch (err) {
+      console.error('Register error:', err);
+      const errMsg = err.response?.data?.message || err.message || 'Registration failed';
+      setError(errMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,6 +48,11 @@ const Register = () => {
         <h2 className="text-3xl font-bold mb-6 text-center text-slate-100">
           Create Account
         </h2>
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm mb-4">
+            {error}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">
@@ -91,9 +112,12 @@ const Register = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold py-2.5 rounded-lg transition-colors shadow-lg"
+            disabled={loading}
+            className={`w-full bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold py-2.5 rounded-lg transition-colors shadow-lg flex items-center justify-center ${
+              loading ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
           >
-            Register
+            {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
         <p className="mt-6 text-sm text-center text-slate-400">

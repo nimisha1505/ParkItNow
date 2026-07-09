@@ -5,8 +5,10 @@ import {
   getParkingLotById,
   updateParkingLot,
   deleteParkingLot,
+  approveParkingLot,
+  rejectParkingLot,
 } from '../controllers/parkingLot.controller.js';
-import { verifyJWT } from '../middlewares/auth.middleware.js';
+import { verifyJWT, isSuperAdmin } from '../middlewares/auth.middleware.js';
 import {
   validateCreateParkingLot,
   validateUpdateParkingLot,
@@ -14,7 +16,7 @@ import {
 
 const router = Router();
 
-// Public read routes, Admin-restricted write/delete routes
+// Public read routes, Owner/Admin-restricted write/delete routes
 router
   .route('/')
   .post(verifyJWT, validateCreateParkingLot, createParkingLot)
@@ -25,5 +27,8 @@ router
   .get(getParkingLotById)
   .patch(verifyJWT, validateUpdateParkingLot, updateParkingLot)
   .delete(verifyJWT, deleteParkingLot);
+
+router.patch('/:parkingLotId/approve', verifyJWT, isSuperAdmin, approveParkingLot);
+router.patch('/:parkingLotId/reject', verifyJWT, isSuperAdmin, rejectParkingLot);
 
 export default router;
