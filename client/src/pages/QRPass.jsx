@@ -17,12 +17,22 @@ const QRPass = () => {
       // 1. Fetch booking details
       const detailsRes = await axiosClient.get(`/bookings/${bookingId}`);
       setBooking(detailsRes.data.data);
+    } catch (err) {
+      console.error('Booking fetch failed:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to load booking details.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      // 2. Fetch/Generate QR pass
+  const handleGenerateQR = async () => {
+    setLoading(true);
+    setError(null);
+    try {
       const qrRes = await axiosClient.post(`/bookings/${bookingId}/qr-pass`);
       setQrCode(qrRes.data.data.qrCode);
     } catch (err) {
-      console.error('QR pass fetch failed:', err);
+      console.error('QR pass generation failed:', err);
       setError(err.response?.data?.message || err.message || 'Failed to generate parking QR pass.');
     } finally {
       setLoading(false);
@@ -100,7 +110,13 @@ const QRPass = () => {
               <p className="text-sm font-semibold text-emerald-400">Scan this QR at parking entry gate</p>
             </>
           ) : (
-            <div className="text-slate-500 text-sm">QR Code unavailable</div>
+            <button
+              onClick={handleGenerateQR}
+              className="bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-extrabold px-6 py-3 rounded-xl shadow-lg transition-colors flex items-center gap-2 text-sm"
+            >
+              <QrCode className="w-5 h-5" />
+              <span>Generate QR Pass</span>
+            </button>
           )}
         </div>
 

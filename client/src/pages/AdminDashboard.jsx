@@ -10,6 +10,7 @@ const AdminDashboard = () => {
   const [overview, setOverview] = useState(null);
   const [recentBookings, setRecentBookings] = useState([]);
   const [occupancy, setOccupancy] = useState([]);
+  const [revenueData, setRevenueData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -17,15 +18,17 @@ const AdminDashboard = () => {
     setLoading(true);
     setError(null);
     try {
-      const [overviewRes, recentRes, occupancyRes] = await Promise.all([
-        axiosClient.get('/admin/dashboard/overview'),
-        axiosClient.get('/admin/dashboard/recent-bookings'),
-        axiosClient.get('/admin/dashboard/occupancy'),
+      const [overviewRes, recentRes, occupancyRes, revenueRes] = await Promise.all([
+        axiosClient.get('/admin/dashboard/overview').catch(e => ({ data: { data: null } })),
+        axiosClient.get('/admin/dashboard/recent-bookings').catch(e => ({ data: { data: [] } })),
+        axiosClient.get('/admin/dashboard/occupancy').catch(e => ({ data: { data: [] } })),
+        axiosClient.get('/admin/dashboard/revenue').catch(e => ({ data: { data: null } })),
       ]);
 
       setOverview(overviewRes.data.data);
       setRecentBookings(recentRes.data.data || []);
       setOccupancy(occupancyRes.data.data || []);
+      setRevenueData(revenueRes.data.data);
     } catch (err) {
       console.error('Fetch dashboard data failed:', err);
       setError(err.response?.data?.message || err.message || 'Failed to retrieve admin dashboard metrics.');
@@ -113,62 +116,100 @@ const AdminDashboard = () => {
         </div>
       ) : (
         <>
-          {/* 4 Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Card 1: Total Parking Lots */}
-            <div className="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-md flex items-center justify-between">
-              <div className="space-y-1">
-                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider block">
-                  Total Parking Lots
-                </span>
-                <span className="text-3xl font-bold text-slate-100">{overview?.totalParkingLots ?? 0}</span>
+          {/* Metrics Rows */}
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Card 1: Total Parking Lots */}
+              <div className="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-md flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider block">
+                    Total Parking Lots
+                  </span>
+                  <span className="text-3xl font-bold text-slate-100">{overview?.totalParkingLots ?? 0}</span>
+                </div>
+                <div className="bg-blue-500/10 text-blue-400 p-3 rounded-lg">
+                  <Compass className="h-6 w-6" />
+                </div>
               </div>
-              <div className="bg-blue-500/10 text-blue-400 p-3 rounded-lg">
-                <Compass className="h-6 w-6" />
+
+              {/* Card 2: Total Slots */}
+              <div className="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-md flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider block">
+                    Total Slots
+                  </span>
+                  <span className="text-3xl font-bold text-sky-400">{overview?.totalSlots ?? 0}</span>
+                </div>
+                <div className="bg-sky-500/10 text-sky-400 p-3 rounded-lg">
+                  <Car className="h-6 w-6" />
+                </div>
+              </div>
+
+              {/* Card 3: Available Slots */}
+              <div className="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-md flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider block">
+                    Available Slots
+                  </span>
+                  <span className="text-3xl font-bold text-emerald-400">{overview?.availableSlots ?? 0}</span>
+                </div>
+                <div className="bg-emerald-500/10 text-emerald-400 p-3 rounded-lg">
+                  <Car className="h-6 w-6" />
+                </div>
+              </div>
+
+              {/* Card 4: Today's Bookings */}
+              <div className="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-md flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider block">
+                    Today's Bookings
+                  </span>
+                  <span className="text-3xl font-bold text-purple-400">{overview?.todayBookings ?? 0}</span>
+                </div>
+                <div className="bg-purple-500/10 text-purple-400 p-3 rounded-lg">
+                  <Calendar className="h-6 w-6" />
+                </div>
               </div>
             </div>
 
-            {/* Card 2: Available Slots */}
-            <div className="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-md flex items-center justify-between">
-              <div className="space-y-1">
-                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider block">
-                  Available Slots
-                </span>
-                <span className="text-3xl font-bold text-emerald-400">{overview?.availableSlots ?? 0}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {/* Card 5: Total Revenue */}
+              <div className="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-md flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider block">
+                    Total Revenue
+                  </span>
+                  <span className="text-3xl font-bold text-yellow-400">₹{overview?.totalRevenue ?? 0}</span>
+                </div>
+                <div className="bg-yellow-500/10 text-yellow-400 p-3 rounded-lg">
+                  <DollarSign className="h-6 w-6" />
+                </div>
               </div>
-              <div className="bg-emerald-500/10 text-emerald-400 p-3 rounded-lg">
-                <Car className="h-6 w-6" />
-              </div>
-            </div>
 
-            {/* Card 3: Today's Bookings */}
-            <div className="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-md flex items-center justify-between">
-              <div className="space-y-1">
-                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider block">
-                  Today's Bookings
-                </span>
-                <span className="text-3xl font-bold text-purple-400">{overview?.todayBookings ?? 0}</span>
+              {/* Card 6: Platform Fee */}
+              <div className="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-md flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider block">
+                    Platform Fee
+                  </span>
+                  <span className="text-3xl font-bold text-emerald-400 font-semibold">₹{overview?.platformFee ?? 0}</span>
+                </div>
+                <div className="bg-emerald-500/10 text-emerald-400 p-3 rounded-lg">
+                  <DollarSign className="h-6 w-6" />
+                </div>
               </div>
-              <div className="bg-purple-500/10 text-purple-400 p-3 rounded-lg">
-                <Calendar className="h-6 w-6" />
-              </div>
-            </div>
 
-            {/* Card 4: Revenue */}
-            <div className="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-md flex items-center justify-between">
-              <div className="space-y-1">
-                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider block">
-                  {user?.role === 'owner' ? 'Owner Earnings' : 'Platform Revenue'}
-                </span>
-                <span className="text-3xl font-bold text-yellow-400">
-                  ₹{user?.role === 'owner' ? (overview?.ownerEarning ?? 0) : (overview?.totalRevenue ?? 0)}
-                </span>
-                {user?.role === 'superAdmin' && (
-                  <span className="text-[10px] text-slate-500 block">Owner Share: ₹{overview?.ownerEarning ?? 0}</span>
-                )}
-              </div>
-              <div className="bg-yellow-500/10 text-yellow-400 p-3 rounded-lg">
-                <DollarSign className="h-6 w-6" />
+              {/* Card 7: Owner Earning */}
+              <div className="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-md flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider block">
+                    Owner Earning
+                  </span>
+                  <span className="text-3xl font-bold text-amber-500 font-semibold">₹{overview?.ownerEarning ?? 0}</span>
+                </div>
+                <div className="bg-amber-500/10 text-amber-500 p-3 rounded-lg">
+                  <DollarSign className="h-6 w-6" />
+                </div>
               </div>
             </div>
           </div>
@@ -249,6 +290,37 @@ const AdminDashboard = () => {
               )}
             </div>
           </div>
+
+          {/* Revenue Trends Section */}
+          {revenueData && revenueData.chartData && (
+            <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg space-y-6 animate-fade-in">
+              <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-emerald-400" />
+                <span>Revenue Trends ({revenueData.period === 'month' ? 'Last 30 Days' : 'Last 7 Days'})</span>
+              </h3>
+              {revenueData.chartData.length === 0 ? (
+                <div className="text-slate-500 text-sm text-center py-6">No revenue data recorded.</div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {revenueData.chartData.map((day) => (
+                    <div key={day._id} className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/60 flex flex-col justify-between">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">{day._id}</span>
+                      <div className="mt-2 flex justify-between items-baseline">
+                        <span className="text-lg font-bold text-emerald-400">₹{day.revenue}</span>
+                        <span className="text-xs text-slate-400 font-semibold">{day.bookingsCount} booking{day.bookingsCount > 1 ? 's' : ''}</span>
+                      </div>
+                      {user?.role === 'superAdmin' && (
+                        <div className="text-[9px] text-slate-500 border-t border-slate-700/50 pt-1.5 mt-1.5 flex justify-between">
+                          <span>Platform: ₹{day.platformFee}</span>
+                          <span>Owner: ₹{day.ownerEarning}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>

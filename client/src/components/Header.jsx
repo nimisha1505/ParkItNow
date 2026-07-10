@@ -34,12 +34,6 @@ const Header = () => {
           {/* If user is NOT logged in */}
           {!isAuthenticated ? (
             <>
-              <Link to="/parking-lots" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-                Parking Lots
-              </Link>
-              <Link to="/register" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-                List Your Parking
-              </Link>
               <Link to="/login" className="text-sm font-medium text-slate-300 hover:text-blue-400 transition-colors">
                 Login
               </Link>
@@ -50,53 +44,61 @@ const Header = () => {
           ) : (
             /* If user IS logged in */
             <>
-              <Link to="/vehicles" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-                Vehicles
-              </Link>
-              <Link to="/parking-lots" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-                Parking Lots
-              </Link>
-              <Link to="/my-bookings" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-                My Bookings
-              </Link>
+              {/* Role: user (Normal User) */}
+              {user?.role === 'user' && (
+                <>
+                  <Link to="/parking-lots" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                    Find Parking
+                  </Link>
+                  <Link to="/vehicles" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                    Vehicles
+                  </Link>
+                  <Link to="/my-bookings" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                    My Bookings
+                  </Link>
+                </>
+              )}
+
+              {/* Role: owner */}
+              {user?.role === 'owner' && (
+                <>
+                  <Link to="/admin" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                    Dashboard
+                  </Link>
+                  <Link to="/list-parking" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                    List Parking
+                  </Link>
+                  <Link to="/owner/parkings" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                    My Parking Spaces
+                  </Link>
+                  <Link to="/admin/qr-verify" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                    QR Verification
+                  </Link>
+                </>
+              )}
+
+              {/* Role: superAdmin */}
+              {user?.role === 'superAdmin' && (
+                <>
+                  <Link to="/admin" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                    Admin Dashboard
+                  </Link>
+                  <Link to="/admin/parking-approvals" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                    Parking Approvals
+                  </Link>
+                  <Link to="/admin/qr-verify" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
+                    QR Verification
+                  </Link>
+                </>
+              )}
+
               <Link to="/profile" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
                 Profile
               </Link>
 
-              {/* List Your Parking visibility for authenticated users */}
-              {(user?.role === 'owner' || user?.role === 'superAdmin') ? (
-                <Link to="/list-parking" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-                  List Your Parking
-                </Link>
-              ) : (
-                <Link to="/register" className="text-sm font-medium text-slate-650 cursor-not-allowed select-none transition-colors" title="List Your Parking (Unavailable for normal users)">
-                  List Your Parking (Unavailable)
-                </Link>
-              )}
-
-              {/* If owner or superAdmin, also show admin dashboard, my parkings, and verification links */}
-              {(user?.role === 'owner' || user?.role === 'superAdmin') && (
-                <>
-                  <Link to="/owner/parkings" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-                    My Parkings
-                  </Link>
-                  <Link to="/admin" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-                    Admin
-                  </Link>
-                  <Link to="/admin/qr-verify" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-                    QR Verify
-                  </Link>
-                  {user?.role === 'superAdmin' && (
-                    <Link to="/admin/parking-approvals" className="text-sm font-medium text-slate-300 hover:text-emerald-400 transition-colors">
-                      Approvals
-                    </Link>
-                  )}
-                </>
-              )}
-
               {/* Greeting and Logout */}
               <div className="flex items-center space-x-4 border-l border-slate-800 pl-4">
-                <span className="text-sm text-slate-400 font-medium select-none">
+                <span className="text-sm text-slate-400 font-medium select-none capitalize">
                   Hi, {user?.name}
                 </span>
                 <button

@@ -25,8 +25,15 @@ const Login = () => {
     setLoading(true);
     setError(null);
     try {
-      await loginUser(formData.email, formData.password);
-      navigate('/parking-lots');
+      const res = await loginUser(formData.email, formData.password);
+      const userRole = res?.data?.user?.role;
+      if (userRole === 'owner') {
+        navigate('/admin');
+      } else if (userRole === 'superAdmin') {
+        navigate('/admin');
+      } else {
+        navigate('/parking-lots');
+      }
     } catch (err) {
       console.error('Login error:', err);
       const errMsg = err.response?.data?.message || err.message || 'Login failed';

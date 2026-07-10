@@ -75,7 +75,9 @@ export const getParkingSlots = asyncHandler(async (req, res) => {
           .status(200)
           .json(new ApiResponse(200, [], 'Parking slots retrieved successfully'));
       }
-      query.status = status || 'available';
+      if (status) {
+        query.status = status;
+      }
     } else {
       if (status) {
         query.status = status;
@@ -88,7 +90,9 @@ export const getParkingSlots = asyncHandler(async (req, res) => {
       const activeLots = await ParkingLot.find({ approvalStatus: 'approved', isActive: true }).select('_id');
       const activeLotIds = activeLots.map((l) => l._id);
       query.parkingLot = { $in: activeLotIds };
-      query.status = status || 'available';
+      if (status) {
+        query.status = status;
+      }
     } else {
       if (status) {
         query.status = status;

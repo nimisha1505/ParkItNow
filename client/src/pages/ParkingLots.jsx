@@ -266,21 +266,15 @@ const ParkingLots = () => {
                     <MapPin className="h-4 w-4 text-slate-500" />
                     <span className="capitalize">{lot.area}, {lot.city}</span>
                   </p>
-                  <div className="flex justify-between items-end">
-                    <p className="text-2xl font-extrabold text-blue-400">
-                      ₹{lot.pricePerHour} <span className="text-sm font-medium text-slate-500">/ hour</span>
-                    </p>
-                  </div>
-
                   {/* Category-based Pricing */}
                   <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-700/30 text-xs space-y-1.5 mt-2">
                     <div className="flex justify-between">
                       <span className="text-slate-400 font-semibold">2-Wheeler:</span>
-                      <strong className="text-emerald-400">₹{lot.pricePerHourByVehicleCategory?.twoWheeler || Math.round(lot.pricePerHour * 0.4)}/hr</strong>
+                      <strong className="text-emerald-450">₹{lot.pricePerHourByVehicleCategory?.twoWheeler || Math.round(lot.pricePerHour * 0.4)}/hr</strong>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400 font-semibold">4-Wheeler:</span>
-                      <strong className="text-emerald-400">₹{lot.pricePerHourByVehicleCategory?.fourWheeler || lot.pricePerHour}/hr</strong>
+                      <strong className="text-emerald-450">₹{lot.pricePerHourByVehicleCategory?.fourWheeler || lot.pricePerHour}/hr</strong>
                     </div>
                   </div>
 

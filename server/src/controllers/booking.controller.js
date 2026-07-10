@@ -36,9 +36,9 @@ export const createBooking = asyncHandler(async (req, res) => {
     throw new ApiError(400, `Vehicle type (${vehicleDoc.type}) is not supported in this slot/lot`);
   }
 
-  // 5. Reject slots with occupied or maintenance status
-  if (['occupied', 'maintenance'].includes(slotDoc.status)) {
-    throw new ApiError(400, `Selected parking slot is currently ${slotDoc.status}`);
+  // 5. Reject slots that are not available
+  if (slotDoc.status !== 'available') {
+    throw new ApiError(400, `Selected parking slot is not available (current status: ${slotDoc.status})`);
   }
 
   // 6. Prevent overlapping bookings for same slot
@@ -58,7 +58,6 @@ export const createBooking = asyncHandler(async (req, res) => {
   const diffMs = end - start;
   const durationHours = Math.ceil(diffMs / (1000 * 60 * 60)); // Ceil up to next hour
 
-  let hourlyRateSnapshot = lotDoc.pricePerHour;
   let category = '';
   if (['bike', 'scooter'].includes(vehicleDoc.type)) {
     category = 'twoWheeler';
@@ -66,6 +65,7 @@ export const createBooking = asyncHandler(async (req, res) => {
     category = 'fourWheeler';
   }
 
+  let hourlyRateSnapshot = lotDoc.pricePerHour;
   if (
     category &&
     lotDoc.pricePerHourByVehicleCategory &&
@@ -73,14 +73,6 @@ export const createBooking = asyncHandler(async (req, res) => {
     lotDoc.pricePerHourByVehicleCategory[category] > 0
   ) {
     hourlyRateSnapshot = lotDoc.pricePerHourByVehicleCategory[category];
-  } else if (
-    lotDoc.pricePerHourByVehicleType &&
-    typeof lotDoc.pricePerHourByVehicleType === 'object' &&
-    vehicleDoc.type &&
-    typeof lotDoc.pricePerHourByVehicleType[vehicleDoc.type] === 'number' &&
-    lotDoc.pricePerHourByVehicleType[vehicleDoc.type] > 0
-  ) {
-    hourlyRateSnapshot = lotDoc.pricePerHourByVehicleType[vehicleDoc.type];
   }
   const totalAmount = durationHours * hourlyRateSnapshot;
 

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { registerUser } = useAuth();
+  const { registerUser, loginUser } = useAuth();
   const [searchParams] = useSearchParams();
 
   const [formData, setFormData] = useState({
@@ -47,13 +47,17 @@ const Register = () => {
     try {
       await registerUser(formData.name, formData.email, formData.password, formData.role);
       
-      if (formData.role === 'owner') {
-        alert('Registration successful! You can now login and submit your parking space for approval.');
-      }
+      // Auto login after registration
+      await loginUser(formData.email, formData.password);
       
-      navigate('/login');
+      if (formData.role === 'owner') {
+        alert('Registration successful! Welcome to the Owner Dashboard.');
+        navigate('/admin');
+      } else {
+        navigate('/parking-lots');
+      }
     } catch (err) {
-      console.error('Register error:', err);
+      console.error('Register/Login error:', err);
       const errMsg = err.response?.data?.message || err.message || 'Registration failed';
       setError(errMsg);
     } finally {

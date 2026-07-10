@@ -136,7 +136,7 @@ const AdminQRVerify = () => {
       <div className="text-center">
         <h2 className="text-3xl font-extrabold text-slate-100 flex items-center justify-center space-x-2">
           <QrCode className="h-8 w-8 text-emerald-400" />
-          <span>QR Verification</span>
+          <span>Owner/Admin QR Verification</span>
         </h2>
         <p className="text-slate-400 mt-2">
           Scan or input booking pass token to verify vehicle reservations at the gate terminal.

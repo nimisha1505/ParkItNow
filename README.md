@@ -34,6 +34,40 @@ Finding parking in congested urban centers can be a source of stress, traffic, a
 
 ---
 
+## 🎯 Demo & Recruiter Walkthrough Guide
+
+The platform comes fully loaded with a rich suite of **realistic seeded demo data** to enable instant end-to-end evaluation. Below is the guide for testing and reviewing the project.
+
+### 📊 Seeded Demo Data
+Our database seed script populates the application with:
+- **10 Madhya Pradesh Cities**: Gwalior, Indore, Bhopal, Jabalpur, Ujjain, Sagar, Rewa, Satna, Dewas, and Ratlam.
+- **63 Approved Parking Lots**: 3+ realistic lots per city, populated with geographical coordinates, custom capacities, and available slots.
+- **350 Parking Slots**: Realistic floor layout structure with statuses like `available`, `occupied`, `reserved`, and `maintenance`.
+- **EV Charging Stations**: 18 lots are pre-configured with EV charging features, specific connector types (e.g., Type 2, CCS, CHAdeMO), and hourly charging rates.
+- **Category Pricing**: Pricing rates mapped per vehicle category (2-Wheeler / 4-Wheeler).
+
+### 🔑 Demo Accounts (Local Testing Only)
+Use these pre-configured credentials to evaluate different roles and workflows:
+
+| Role | Email | Password | Allowed Capabilities |
+|---|---|---|---|
+| **Driver (User)** | `demo.user@parkitnow.com` | `Demo@123` | Find parking spaces by city, manage vehicles, book slots, view pricing previews, and generate gate QR passes. |
+| **Spot Owner** | `demo.owner@parkitnow.com` | `Demo@123` | List parking spots with EV settings/pricing categories, view owner metrics dashboard, scan/verify client QR passes, and check vehicles in/out. |
+| **Super Admin** | `demo.admin@parkitnow.com` | `Demo@123` | Access global system stats, review pending parking lot approvals, verify client QR passes, and check occupancy metrics. |
+
+> [!NOTE]
+> All credentials use secure one-way bcrypt password hashing in the database.
+
+### 🔄 End-to-End Demo Flow
+To test the complete workflow:
+1. **Find & Book Parking**: Sign in as the **Driver** (`demo.user@parkitnow.com`). Navigate to **Find Parking**, choose a city (e.g., `Gwalior`), select a lot, specify a duration, select an available slot (green border) on the interactive map, and confirm the booking.
+2. **Generate QR Pass**: Go to **My Bookings** and click **View QR Pass**. Click the **Generate QR Pass** button to generate a gate terminal scan pass.
+3. **Scan & Check In**: Sign in as the **Spot Owner** (`demo.owner@parkitnow.com`) or **Super Admin** (`demo.admin@parkitnow.com`). Go to **Owner/Admin QR Verification**, paste the generated pass payload or booking reference, click **Verify QR**, then click **Check In**.
+4. **Check Out**: Once the parking period finishes, verify the token again in the scan portal and click **Check Out**.
+5. **Dashboard Analytics**: Check the **Dashboard** metrics. You'll see real-time updates for Today's Bookings, Occupancy Levels, and Revenue Earnings lists!
+
+---
+
 ## ⚡ Key Features
 
 ### 🚙 For Drivers
